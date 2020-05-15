@@ -265,7 +265,6 @@ Variable R : rcfType.
 
 Local Notation sqrtr := Num.sqrt.
 Local Notation C := R[i].
-Local Notation RComplex := (Rcomplex R).
 Local Notation Re := (@complex.Re R).
 Local Notation Im := (@complex.Im R).
 
