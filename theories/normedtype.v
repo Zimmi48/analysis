@@ -203,7 +203,7 @@ End numFieldType_vec_canonical.
 
 
 
-Lemma locallyN (R : numFieldType) (x : R^o) :
+Lemma locallyN (R : numFieldType) (x : R) :
   locally (- x) = [set [set - y | y in A] | A in locally x].
 Proof.
 rewrite predeqE => A; split=> [[e egt0 oppxe_A]|[B [e egt0 xe_B] <-]];
@@ -218,14 +218,14 @@ exists e => // y xe_y; exists (- y); last by rewrite opprK.
 by apply/oppxe_A; rewrite /ball_ distrC opprK addrC.
 Qed.
 
-Lemma openN (R : numFieldType) (A : set R^o) :
+Lemma openN (R : numFieldType) (A : set R) :
   open A -> open [set - x | x in A].
 Proof.
 move=> Aop; rewrite openE => _ [x /Aop x_A <-].
 by rewrite /interior locallyN; exists A.
 Qed.
 
-Lemma closedN (R : numFieldType) (A : set R^o) :
+Lemma closedN (R : numFieldType) (A : set R) :
   closed A -> closed [set - x | x in A].
 Proof.
 move=> Acl x clNAx.
@@ -458,13 +458,13 @@ by split=> zxy e /zxy; rewrite [z + _]addrC [_ + x]addrC.
 Qed.
 
 Lemma coord_continuous {K : numFieldType} m n i j :
-  continuous (fun M : 'M[K^o]_(m.+1, n.+1) => M i j).
+  continuous (fun M : 'M[K]_(m.+1, n.+1) => M i j).
 Proof.
 move=> /= M s /= /(locallyP (M i j)); rewrite locally_E => -[e e0 es].
 apply/locallyP; rewrite locally_E; exists e => //= N MN; exact/es/MN.
 Qed.
 
-Global Instance Proper_locally'_numFieldType (R : numFieldType) (x : R^o) :
+Global Instance Proper_locally'_numFieldType (R : numFieldType) (x : R) :
   ProperFilter (locally' x).
 Proof.
 apply: Build_ProperFilter => A [_/posnumP[e] Ae].
@@ -474,7 +474,7 @@ rewrite /= opprD addrA subrr distrC subr0 ger0_norm //.
 by rewrite {2}(splitr e%:num) ltr_spaddl.
 Qed.
 
-Global Instance Proper_locally'_realType (R : realType) (x : R^o) :
+Global Instance Proper_locally'_realType (R : realType) (x : R^o) : (* TODO: ^o out*)
   ProperFilter (locally' x).
 Proof. exact: Proper_locally'_numFieldType. Qed.
 
