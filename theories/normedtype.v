@@ -171,8 +171,23 @@ Canonical numFieldType_filteredType :=
 Canonical numFieldType_topologicalType : topologicalType := TopologicalType R
   (topologyOfBallMixin (pseudoMetric_of_normedDomain [normedZmodType R of R])).
 Canonical numFieldType_pseudoMetricType := @PseudoMetric.Pack R R (@PseudoMetric.Class R R (Topological.class numFieldType_topologicalType) (@pseudoMetric_of_normedDomain R R)).
-Definition numdFieldType_lalgType : lalgType R := @GRing.regular_lalgType R.
+Definition numFieldType_lalgType : lalgType R := @GRing.regular_lalgType R.
 End numField_canonical.
+
+Section realField_canonical. (*New *)
+Variable R : realFieldType.
+Canonical realFieldType_pointedType :=
+  [pointedType of R for pointed_of_zmodule R].
+Canonical realFieldType_filteredType :=
+  [filteredType R of R for filtered_of_normedZmod R].
+Canonical realFieldType_topologicalType : topologicalType := TopologicalType R
+  (topologyOfBallMixin (pseudoMetric_of_normedDomain [normedZmodType R of R])).
+Canonical realFieldType_pseudoMetricType := @PseudoMetric.Pack R R
+                            (@PseudoMetric.Class R R
+                            (Topological.class realFieldType_topologicalType)
+                            (@pseudoMetric_of_normedDomain R R)).
+Definition realFieldType_lalgType : lalgType R := @GRing.regular_lalgType R.
+End realField_canonical.
 
 
 Canonical R_pointedType := [pointedType of
@@ -2543,24 +2558,24 @@ End cvg_seq_bounded.
 
 Section some_sets.
 Variable R : realFieldType (* TODO: can we generalize to numFieldType? *).
-
+(* TODO : topology on R *)
 (** Some open sets of [R] *)
 
-Lemma open_lt (y : R) : open [set x : R^o | x < y].
+Lemma open_lt (y : R) : open [set x : R| x < y].
 Proof.
 move=> x /=; rewrite -subr_gt0 => yDx_gt0; exists (y - x) => // z.
 by rewrite /= distrC ltr_distl addrCA subrr addr0 => /andP[].
 Qed.
 Hint Resolve open_lt : core.
 
-Lemma open_gt (y : R) : open [set x : R^o | x > y].
+Lemma open_gt (y : R) : open [set x : R | x > y].
 Proof.
 move=> x /=; rewrite -subr_gt0 => xDy_gt0; exists (x - y) => // z.
 by rewrite /= distrC ltr_distl opprB addrCA subrr addr0 => /andP[].
 Qed.
 Hint Resolve open_gt : core.
 
-Lemma open_neq (y : R) : open [set x : R^o | x != y].
+Lemma open_neq (y : R) : open [set x : R | x != y].
 Proof.
 rewrite (_ : xpredC _ = [set x | x < y] `|` [set x | x > y] :> set _) /=.
   by apply: openU => //; apply: open_lt.
