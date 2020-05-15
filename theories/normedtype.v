@@ -357,12 +357,12 @@ End pseudoMetricnormedzmodule_lemmas.
 
 Section numFieldType_canonical_contd.
 Variable R : numFieldType.
-Lemma R_ball : @ball _ [pseudoMetricType R of R^o] = ball_ (fun x => `| x |).
+Lemma R_ball : @ball _ [pseudoMetricType R of R] = ball_ (fun x => `| x |).
 Proof. by []. Qed.
 Definition numFieldType_pseudoMetricNormedZmodMixin :=
   PseudoMetricNormedZmodule.Mixin R_ball.
 Canonical numFieldType_pseudoMetricNormedZmodType :=
-  @PseudoMetricNormedZmodType R R^o numFieldType_pseudoMetricNormedZmodMixin.
+  @PseudoMetricNormedZmodType R R numFieldType_pseudoMetricNormedZmodMixin.
 End numFieldType_canonical_contd.
 
 (** locally *)
