@@ -146,6 +146,7 @@ Definition numfield_lmodMixin :=
           (fun v a b => GRing.mulrDl a b v).
 Canonical numfield_lmodType := LmodType K K numfield_lmodMixin.
 Canonical numfield_regular_lalgType := LalgType K K (@GRing.mulrA _).
+(*Not enough to  to make _*_ and _*:_ definitionnaly equal *) (*TODO *)
 End vecspace_of_numfield.
 
 Section pseudoMetric_of_normedDomainnumField. (*NEW *)
