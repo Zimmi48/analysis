@@ -5,7 +5,6 @@ From mathcomp Require Import complex.
 From mathcomp Require Import boolp reals ereal derive.
 Require Import classical_sets posnum topology normedtype landau.
 
-(* Pour distinguer fonctions mesurables et integrables, utiliser des structures comme posrel. *)
 Import Order.TTheory GRing.Theory Num.Theory ComplexField Num.Def.
 Local Open Scope ring_scope.
 Local Open Scope classical_set_scope.
@@ -38,9 +37,6 @@ Proof. by []. Qed.
 
 Lemma ReIm_eq0 (x : C) : (x = 0) = ((Re x = 0) /\ (Im x = 0)).
 Proof. by rewrite -[in Re x= _]Re0 -Im0 -eqE_complex. Qed.
-
-Lemma neqCr0 (r s : R) : (r%:C != 0) = (r != 0).
-Admitted.
 
 Lemma scalei_muli : forall z : C^o, 'i * z = 'i *: z.
 Proof. by []. Qed.
@@ -146,6 +142,9 @@ Proof. exact: (inj_eq (@complexI _)). Qed.
 Lemma eqCI (r s : R) : (r *i == s *i) = (r == s).
 Proof. by apply/idP/idP => [/eqP[] ->//|/eqP ->]. Qed.
 
+Lemma neqCr0 (r : R) : (r%:C != 0) = (r != 0).
+Proof. by apply/negP/negP; rewrite ?eqCr. Qed.
+
 Lemma scale_inv (h : R) (v : C) : h != 0 -> v != 0 -> (h *: v)^-1 = h^-1 *: v^-1.
 Proof.
 by move=> h0 v0; rewrite scalecr invrM // ?unitfE ?eqCr // mulrC scalecr real_complex_inv.
@@ -231,32 +230,32 @@ Canonical C_filteredType.
 
 (* End C_Rnormed. *)
 
-Canonical regular_pointedType (R: pointedType) :=
-  [pointedType of R^o].
+(* Canonical regular_pointedType (R: pointedType) := *)
+(*   [pointedType of R^o]. *)
 
-Canonical regular_normedZmodType (R: numDomainType) (V: normedZmodType R) :=
-  [normedZmodType R of V^o].
+(* Canonical regular_normedZmodType (R: numDomainType) (V: normedZmodType R) := *)
+(*   [normedZmodType R of V^o]. *)
 
-Canonical regular_numDomainType (R: numDomainType) :=
-  [numDomainType of R^o].
+(* Canonical regular_numDomainType (R: numDomainType) := *)
+(*   [numDomainType of R^o]. *)
 
-Canonical regular_numFieldType (R: numFieldType) :=
-  [numFieldType of R^o].
+(* Canonical regular_numFieldType (R: numFieldType) := *)
+(*   [numFieldType of R^o]. *)
 
-Canonical regular_rcfType (R: rcfType) :=
-  [rcfType of R^o].
+(* Canonical regular_rcfType (R: rcfType) := *)
+(*   [rcfType of R^o]. *)
 
-Canonical regular_filteredType U (R: filteredType U) :=
-  [filteredType U of R^o].
+(* Canonical regular_filteredType U (R: filteredType U) := *)
+(*   [filteredType U of R^o]. *)
 
-Canonical regular_topologicalType (R : topologicalType) :=
-  [topologicalType of R^o].
+(* Canonical regular_topologicalType (R : topologicalType) := *)
+(*   [topologicalType of R^o]. *)
 
-Canonical regular_pseudoMetricType U (R : pseudoMetricType U):=
-  [pseudoMetricType U of R^o].
+(* Canonical regular_pseudoMetricType U (R : pseudoMetricType U):= *)
+(*   [pseudoMetricType U of R^o]. *)
 
-Canonical regular_completeType U (R : completeType U) :=
-  @Complete.clone U R^o _ _ id.
+(* Canonical regular_completeType U (R : completeType U) := *)
+(*   @Complete.clone U R^o _ _ id. *)
 
 End complex_extras.
 
@@ -275,7 +274,7 @@ Lemma cvg_translim (T : topologicalType) (F G: set (set T)) (l :T) :
    F `=>` G -> (G --> l) -> (F --> l).
 Proof. move => FG Gl. apply : cvg_trans; [exact : FG | exact : Gl]. Qed.
 
-Lemma cvg_scaler (K : numFieldType) (V : normedModType K) (T : topologicalType)
+Lemma is_cvg_scaler (K : numFieldType) (V : normedModType K) (T : topologicalType)
  (F : set (set T)) (H :Filter F) (f : T -> V) (k : K) :
  cvg (f @ F) -> cvg ((k \*: f) @ F ).
 Proof. by move => /cvg_ex [l H0] ; apply: cvgP; apply: cvgZr; apply: H0. Qed.
@@ -284,6 +283,14 @@ Lemma limin_scaler (K : numFieldType) (V : normedModType K) (T : topologicalType
   (F : set (set T)) (FF : ProperFilter F) (f : T -> V) (k : K) :
   cvg(f @ F) -> k *: lim (f @ F) = lim ((k \*: f) @ F ).
 Proof. by move => cv; apply/esym/cvg_lim => //; apply: cvgZr. Qed.
+
+
+Lemma is_cvg_within (T U : topologicalType) (h : T -> U) (F: set (set T)) (D: set T):
+  (Filter F) -> cvg (h @ F) -> cvg (h @ within D F).
+Proof.
+  by move=> FF /cvg_ex [l H]; apply/cvg_ex; exists l; apply: cvg_within_filter.
+Qed.
+
 
 Definition holomorphic (f : C^o -> C^o) (c : C^o) :=
   cvg ((fun (h : C^o) => h^-1 *: ((f \o shift c) h - f c)) @ (locally' (0:C^o))).
@@ -318,15 +325,14 @@ set quotR := (X in (X @ _)).
 pose locR0 := within Real_line (locally' 0).
 simpl in (type of quotR).
 pose mulv (h : C) := (h * v).
-pose quotC (h : C) : C^o := h^-1 *: ((f \o shift c) h - f c).
-case: (EM (v = 0)) => [eqv0|/eqP vneq0]. 
+pose quotC (h : C^o) : C^o := h^-1 *: ((f \o shift c) h - f c).
+case: (EM (v = 0)) => [eqv0|/eqP vneq0].
 - apply: cvgP.
   have eqnear0 : {near locR0, 0 =1 quotR}.
     by  exists 1=> // h _ _ ; rewrite /quotR /shift eqv0 /= scaler0 add0r addrN mulr0.
   apply: cvg_trans.
-  + exact (near_eq_cvg eqnear0). Search _ ( Filter _ -> (fun=> _) @ _ --> _).
-  + apply: (cvg_cst (0 : C^o)). (* apply: (cvg_cst (0 : C^o) locR0) *)
-    (*lim_cst from normedtype applies only to endofunctions*)
+  + exact (near_eq_cvg eqnear0).
+  + apply: (cvg_cst (0 : C^o)).
 - apply: (cvgP (v *: l)).
   have eqnear0 : {near (locR0), (v \*: quotC) \o mulv =1 quotR}.
     exists 1 => // h _ neq0h //=; rewrite /quotC /quotR /mulv invrM /=.
@@ -354,9 +360,9 @@ case: (EM (v = 0)) => [eqv0|/eqP vneq0].
         rewrite ltr_pdivl_mulr in ballrb; last by rewrite normr_gt0.
         by rewrite -(ger0_norm (ltW leq0r)) (le_lt_trans _ ballrb) // rmorphM /=.
         apply: (ballrA (mulv b) ballCrb).
-        by apply mulf_neq0. 
-  + admit. Admitted. (*apply: cvg_scaler; rewrite /quotC.
-Qed.*)
+        by apply mulf_neq0.
+  + by apply: cvgZr.
+Qed.
 
 (*The fact that the topological structure is only available on C^o 
 makes iterations of C^o apply *)
@@ -364,9 +370,7 @@ makes iterations of C^o apply *)
 (*The equality between 'i as imaginaryC from ssrnum and 'i is not transparent:
  neq0ci is part of ssrnum and uneasy to find *)
 
-Lemma is_cvg_within (T U : topologicalType) (h : T -> U) (F: set (set T)) (D: set T):
-  (Filter F) -> cvg (h @ F) -> cvg (h @ within D F).
-Proof. Admitted.
+
 
 Lemma holo_CauchyRieman (f : C^o -> C^o) c: holomorphic f c -> CauchyRiemanEq f c.
 Proof.
@@ -383,9 +387,9 @@ have properlocR0 : ProperFilter (locR0).
   move => P [[r1 r2] ler] /= b.
   move: ler; rewrite ltcE /= => /andP [r20 r10].
   exists (r1 / 2)%:C.
-  have : (ball_ [eta normr] 0 (r1 +i* r2) ) ((r1 / 2)%:C). 
+  have : (ball_ [eta normr] 0 (r1 +i* r2) ) ((r1 / 2)%:C).
   - rewrite /ball_ sub0r normrN ltcE /=; apply/andP; split.
-      by [].  
+      by [].
       rewrite expr0n /= addr0 sqrtr_sqr /= gtr0_norm.
       rewrite gtr_pmulr. (* 2 ^-1 < 1 *) rewrite invf_lt1 /=.
         by have lt01 : 0 < 1 by [] ; have le11 : 1 <= 1 by [];
@@ -396,10 +400,9 @@ have properlocR0 : ProperFilter (locR0).
   - move =>  /b  h.
     have r1n0: r1 != 0 by apply: lt0r_neq0.
     have: (r1 / 2)%:C != 0.
-    rewrite (neqCr0 (r1/2)). apply mulf_neq0.
-      by [].
+    rewrite (neqCr0 (r1/2)); apply mulf_neq0.
+      by []. 
       by apply:invr_neq0.
-      by [].
       by move => /h {h} {r10}; rewrite /Real_line /= => h; apply: (h _).
       have HR0: cvg (quotC @ locR0).
        by apply: is_cvg_within ;  apply/cvg_ex; exists l.
@@ -410,27 +413,28 @@ have properlocR0 : ProperFilter (locR0).
   move => [r ler] ball; simpl in (type of ball).
   exists r ; first by [].
   move => a /= ; rewrite sub0r normrN => Ba aneq0  Ra.
-  have : a * 'i != 0 by apply: mulf_neq0; last by rewrite neq0Ci.
-  have : ball_ [eta normr] 0 r (a * 'i).
-    simpl ; rewrite sub0r normrN normrM /=.
-    have -> :  `|'i| = 1 by  move => T ;  simpc ; rewrite expr0n expr1n /= add0r sqrtr1. 
+  have: a * 'i != 0 by apply: mulf_neq0; last by rewrite neq0Ci.
+  have: ball_ [eta normr] 0 r (a * 'i).
+    simpl; rewrite sub0r normrN normrM /=.
+    have ->: `|'i| = 1 by move => T;  simpc; rewrite expr0n expr1n /= add0r sqrtr1. 
     by rewrite mulr1.
   by move => /ball. have HRcomp: cvg (quotC \o *%R^~ 'i%R @ locR0).
   by apply/cvg_ex;  simpl; exists l.
-have -> : lim (quotR @ locR0)  = 'i *: lim (quotC \o ( fun h => h *'i) @ locR0).
-  have : 'i \*:quotC \o ( fun h => h *'i) =1 quotR.
+have ->: lim (quotR @ locR0) = 'i *: lim (quotC \o ( fun h => h *'i) @ locR0).
+  have: 'i \*:quotC \o ( fun h => h *'i) =1 quotR.
   move => h /= ;rewrite /quotC /quotR /=.
   rewrite invcM scalerA mulrC -mulrA mulVf.
     by rewrite mulr1.
     by rewrite neq0Ci.
-by move => /funext <- ; rewrite (limin_scaler properlocR0 'i HRcomp).
+by move => /funext <-; rewrite (limin_scaler properlocR0 'i HRcomp).
 rewrite scaleC_mul.
-suff : lim (quotC @ locR0) = lim (quotC \o  *%R^~ 'i%R @ locR0) by move => -> .
-have : (quotC @ locR0) --> l. admit. (* by apply: is_cvg_within.*)
-move => /cvg_lim -> .
-move: lem.
-  by move => /cvg_lim -> .
-Admitted. 
+suff: lim (quotC @ locR0) = lim (quotC \o  *%R^~ 'i%R @ locR0) by move => -> .
+have: (quotC @ locR0) --> l  by apply: cvg_within_filter.
+move => /cvg_lim ->.
+  by move: lem => /cvg_lim ->.
+  by apply: norm_hausdorff.
+Qed.
+
 
 (** Previous formalisation without within and with Rcomplex **)
 
@@ -641,7 +645,7 @@ Admitted.
 (* Admitted. *)
 
 Theorem CauchyRiemann (f : C^o -> C^o) c : (holomorphic f c) <->
-  (forall v : C, derivable (complex_realfun f) c v) /\ (CauchyRiemanEq f c).
+ (forall v : C^o, Rderivable_fromcomplex f c v)/\ (CauchyRiemanEq f c).
 Proof.
 Admitted.
 
