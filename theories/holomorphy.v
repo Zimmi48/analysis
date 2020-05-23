@@ -1,5 +1,5 @@
-(* mathcomp analysis (c) 2017 Inria and AIST. License: CeCILL-C.              *)
-From mathcomp Require Import ssreflect ssrfun ssrbool.  
+(* mathcomp analysis (c) 2017 Inria and AIST. License: CeCILL-C.              *) 
+From mathcomp Require Import ssreflect ssrfun ssrbool.
 From mathcomp Require Import ssrnat eqtype choice fintype bigop order ssralg ssrnum. 
 From mathcomp Require Import complex.
 From mathcomp Require Import boolp reals ereal derive.
@@ -32,7 +32,7 @@ Canonical complex_lalgType.
 
 Lemma scalerCAcomplex (R: rcfType) (x y z : R[i]) : x *: (y * z) = y * (x *: z).
 Proof.
- by rewrite -!numField_scale_mul mulrA mulrA [in _ * y]mulrC.
+ by rewrite -!numfield_scale_mul mulrA mulrA [in _ * y]mulrC.
 Qed.
 
 Canonical complex_algType (R : rcfType) := AlgType R[i] R[i] (@scalerCAcomplex R).
@@ -40,7 +40,7 @@ Canonical complex_algType (R : rcfType) := AlgType R[i] R[i] (@scalerCAcomplex R
 End complexLmod.
 
 Section complex_topological. (*New *)
-Variable R : rcfType. 
+Variable R : rcfType.
 Canonical numFieldType_pointedType :=
   [pointedType of R[i] for pointed_of_zmodule (complex_zmodType R)].
 Canonical numFieldType_filteredType :=
@@ -69,7 +69,7 @@ Local Notation Im := (@complex.Im R).
 
 Lemma scalc1 : forall (h :C ), h *: (1%:C) = h.
 Proof.
-  by move => h; rewrite -numField_scale_mul mulr1.
+  by move => h; rewrite -numfield_scale_mul mulr1.
 Qed.
 
 Lemma eqE_complex : forall (x y : C), (x = y) = ((Re x = Re y) /\ (Im x = Im y)).
