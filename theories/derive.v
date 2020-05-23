@@ -1391,12 +1391,13 @@ by rewrite ltr0_norm // addrC subrr.
 Grab Existential Variables. all: end_near. Qed.
 
 Lemma ler0_cvg_map (R : realFieldType) (T : topologicalType) (F : set (set T))
-  (FF : ProperFilter F) (f : T -> R^o) :
+  (FF : ProperFilter F) (f : T -> R) :
   (\forall x \near F, f x <= 0) -> cvg (f @ F) -> lim (f @ F) <= 0.
 Proof.
 move=> fle0 fcv; rewrite -oppr_ge0.
 have limopp : - lim (f @ F) = lim (- f @ F).
-  by apply: Logic.eq_sym; apply: cvg_map_lim => //; apply: cvgN.
+  apply: Logic.eq_sym; apply: cvg_map_lim; first by apply: Rhausdorff.
+  by apply: (@cvgN _ (regular_numFieldType_normedModType R)). (*TODO: simplify *)
 rewrite limopp; apply: le0r_cvg_map; last by rewrite -limopp; apply: cvgN.
 by move: fle0; apply: filterS => x; rewrite oppr_ge0.
 Qed.
@@ -1408,7 +1409,9 @@ Lemma ler_cvg_map (R : realFieldType) (T : topologicalType) (F : set (set T)) (F
 Proof.
 move=> lefg fcv gcv; rewrite -subr_ge0.
 have eqlim : lim (g @ F) - lim (f @ F) = lim ((g - f) @ F).
-  by apply/esym; apply: cvg_map_lim => //; apply: cvgD => //; apply: cvgN.
+  apply/esym; apply: cvg_map_lim => //; first by apply: Rhausdorff.
+  apply: (@cvgD _ ( (regular_numFieldType_normedModType R)))  => //. (*TODO: simplify *)
+  by apply: cvgN.
 rewrite eqlim; apply: le0r_cvg_map; last first.
   by rewrite /(cvg _) -eqlim /=; apply: cvgD => //; apply: cvgN.
 by move: lefg; apply: filterS => x; rewrite subr_ge0.
