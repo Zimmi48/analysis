@@ -47,16 +47,33 @@ Canonical numFieldType_filteredType :=
   [filteredType R[i] of R[i] for filtered_of_normedZmod (complex_normedZmodType R)].
 Canonical numFieldType_topologicalType : topologicalType := TopologicalType R[i]
   (topologyOfBallMixin (pseudoMetric_of_normedDomain [normedZmodType R[i] of R[i]])).
-Canonical numFieldType_pseudoMetricType :=
-                          @PseudoMetric.Pack (complex_numFieldType R) R[i]
+
+
+Canonical complex_pseudoMetricType :=
+                       @PseudoMetric.Pack (complex_numFieldType R) R[i]
                          (@PseudoMetric.Class (complex_numFieldType R) R[i]
                          (Topological.class numFieldType_topologicalType)
                          (@pseudoMetric_of_normedDomain (complex_numFieldType R)
                                                    (complex_normedZmodType R))).
-(* Canonical complex_normedModType := (* makes is_cvg_scaler fail ?! *) *)
-(*   NormedModType R[i] (numfield_lmodType (complex_numFieldType R)) *)
-(*                 (numField_normedModMixin (complex_numFieldType R)). *)
+
+Lemma complex_nb :  ball  = ball_ (fun (x : R[i]) => `| x |).
+Proof. by []. Qed.
+
+Definition complex_PseudoMetricNormedZmodulemixin :=
+  PseudoMetricNormedZmodule.Mixin complex_nb.
+
+Definition complex_PseudoMetricNormedZmodule :=
+  PseudoMetricNormedZmodType R[i] R[i] complex_PseudoMetricNormedZmodulemixin.
+
+Canonical complex_PseudoMetricNormedZmodule. 
+
+Canonical complex_normedModType := (* makes is_cvg_scaler fail ?! *)
+  NormedModType R[i] (numfield_lmodType (complex_numFieldType R))
+                (numField_normedModMixin (complex_numFieldType R)).
 End complex_topological.
+
+Variables (K : numFieldType) (V : normedModType K) ( k : K) ( x y : V).
+
 
 Section complex_extras.
 Variable R : rcfType.
@@ -289,7 +306,7 @@ Definition Rderivable_fromcomplex (f : C -> C) c v := (*TODO take ^o out *)
                          (within Real_line (locally' (0:C^o)))).
 
 
-(*We should find a way to make scalar mul and mul convertible on numFields *)
+(* make scalar mul and mul convertible on numFields *)
 
 
 Lemma holo_derivable (f : C -> C) c :
@@ -300,7 +317,7 @@ move => [l H]; rewrite /Rderivable_fromcomplex => v /=.
   (* rewrite /type_of_filter /= in l H.  *)
 set quotR := (X in (X @ _)).
 pose locR0 := within Real_line (locally' (0:C^o)).
-have FlocR0 : Filter locR0. admit (*why is it needed without ^o *).
+have FlocR0 : Filter locR0 by apply: within_filter.
 simpl in (type of quotR).
 pose mulv (h : C) := (h * v).
 pose quotC (h : C) : C := h^-1 *: ((f \o shift c) h - f c).
@@ -310,7 +327,7 @@ case: (EM (v = 0)) => [eqv0|/eqP vneq0].
     by  exists 1=> // h _ _ ; rewrite /quotR /shift eqv0 /= scaler0 add0r addrN mulr0.
   apply: cvg_trans.
   + by apply: (near_eq_cvg eqnear0).
-  + apply: (cvg_cst (0:C)). 
+  + apply: (cvg_cst (0:C)).
 - apply: (cvgP (v *: l)).
   have eqnear0 : {near (locR0), (v \*: quotC) \o mulv =1 quotR}.
     exists 1 => // h _ neq0h //=; rewrite /quotC /quotR /mulv invrM /=.
