@@ -1,11 +1,11 @@
 (* mathcomp analysis (c) 2017 Inria and AIST. License: CeCILL-C.              *) 
 From mathcomp Require Import ssreflect ssrfun ssrbool.
-From mathcomp Require Import ssrnat eqtype choice fintype bigop order ssralg ssrnum. 
+From mathcomp Require Import ssrnat eqtype choice fintype bigop order ssralg ssrnum.   
 From mathcomp Require Import complex.
 From mathcomp Require Import boolp reals ereal derive.
 Require Import classical_sets posnum topology normedtype landau.
 
-Import Order.TTheory GRing.Theory Num.Theory ComplexField Num.Def.
+Import Order.TTheory GRing.Theory Num.Theory (*ComplexField*) Num.Def.
 Local Open Scope ring_scope.
 Local Open Scope classical_set_scope.
 Local Open Scope complex_scope.
@@ -20,14 +20,14 @@ Section complexLmod.
 file depends on *)
 
 Definition complex_lmodMixin  (R : rcfType):=
-     (@numfield_lmodMixin (complex_numFieldType R)).
+     (@numfield_lmodMixin (ComplexField.complex_numFieldType R)).
 
 Definition complex_lmodType (R : rcfType) :=
   LmodType R[i] R[i]  (complex_lmodMixin R).
 Canonical complex_lmodType.
 
 Definition  complex_lalgType (R : rcfType) :=
-  LalgType R[i] R[i] (@mulrA (complex_ringType R)).
+  LalgType R[i] R[i] (@mulrA (ComplexField.complex_ringType R)).
 Canonical complex_lalgType.
 
 Lemma scalerCAcomplex (R: rcfType) (x y z : R[i]) : x *: (y * z) = y * (x *: z).
@@ -40,21 +40,19 @@ Canonical complex_algType (R : rcfType) := AlgType R[i] R[i] (@scalerCAcomplex R
 End complexLmod.
 
 Section complex_topological. (*New *)
-Variable R : rcfType.
+  Variable R : rcfType.
+
 Canonical numFieldType_pointedType :=
-  [pointedType of R[i] for pointed_of_zmodule (complex_zmodType R)].
+  [pointedType of R[i] for pointed_of_zmodule (ComplexField.complex_zmodType R)].
 Canonical numFieldType_filteredType :=
-  [filteredType R[i] of R[i] for filtered_of_normedZmod (complex_normedZmodType R)].
+  [filteredType R[i] of R[i] for filtered_of_normedZmod (ComplexField.complex_normedZmodType R)].
 Canonical numFieldType_topologicalType : topologicalType := TopologicalType R[i]
   (topologyOfBallMixin (pseudoMetric_of_normedDomain [normedZmodType R[i] of R[i]])).
 
+Canonical complex_pseudoMetricType := PseudoMetricType R[i]
+                 (@pseudoMetric_of_normedDomain (ComplexField.complex_numFieldType R)
+                                     (ComplexField.complex_normedZmodType R)).
 
-Canonical complex_pseudoMetricType :=
-                       @PseudoMetric.Pack (complex_numFieldType R) R[i]
-                         (@PseudoMetric.Class (complex_numFieldType R) R[i]
-                         (Topological.class numFieldType_topologicalType)
-                         (@pseudoMetric_of_normedDomain (complex_numFieldType R)
-                                                   (complex_normedZmodType R))).
 
 Lemma complex_nb :  ball  = ball_ (fun (x : R[i]) => `| x |).
 Proof. by []. Qed.
@@ -65,16 +63,15 @@ Definition complex_PseudoMetricNormedZmodulemixin :=
 Definition complex_PseudoMetricNormedZmodule :=
   PseudoMetricNormedZmodType R[i] R[i] complex_PseudoMetricNormedZmodulemixin.
 
-Canonical complex_PseudoMetricNormedZmodule. 
+Canonical complex_PseudoMetricNormedZmodule.
 
 (* Canonical complex_normedModType := (* makes is_cvg_scaler fail ?! *) *)
-(*   NormedModType R[i] (numfield_lmodType (complex_numFieldType R)) *)
-(*                 (numField_normedModMixin (complex_numFieldType R)). *)
+(*   NormedModType R[i] (numfield_lmodType (ComplexField.complex_numFieldType R)) *)
+(*                 (numField_normedModMixin (ComplexField.complex_numFieldType R)). *)
 
 (* Variables (K : numFieldType) (V : normedModType K) ( k : K) ( x y : V). *)
-
-(* Fail Check ( k *: y). *)
-
+(* Fail Check (k *: y). Check NormedModule.lmodType.  *)
+(* Check (k *: (y: NormedModule.lmodType V)). *)
 
 
 End complex_topological.
@@ -120,6 +117,8 @@ Proof. by []. Qed.
 Lemma scaleC_mul : forall (w  v : C^o), (v *: w = v * w). (*TODO take ^o out *)
 Proof. by []. Qed.
 
+Notation normc := ComplexField.normc.
+
 Lemma normc0 : normc 0 = 0 :> R  .
 Proof. by rewrite /normc //= expr0n //= add0r sqrtr0. Qed.
 
@@ -163,7 +162,7 @@ Lemma Im_mul (x : R) : x *i = x%:C * 'i%C.
 Proof. by simpc. Qed.
 
 Lemma normcD (x y : C) : normc (x + y) <= normc x + normc y.
-Proof. by rewrite -lecR realtocomplex_additive; apply: lec_normD. Qed.
+Proof. by rewrite -lecR realtocomplex_additive; apply: ComplexField.lec_normD. Qed.
 
 (* Lemma normcZ (l : R) : forall (x : C), normc (l *: x) = `|l| * (normc x). *)
 (* Proof. *)
@@ -180,7 +179,7 @@ Lemma normc_gt0 (v : C) : (0 < normc v) = (v != 0).
 Proof.
 rewrite lt_neqAle normc_ge0 andbT; apply/idP/idP; apply/contra.
 by move/eqP ->; rewrite normc0.
-by rewrite eq_sym => /eqP/eq0_normc ->.
+by rewrite eq_sym => /eqP/ComplexField.eq0_normc ->.
 Qed.
 
 Lemma mulrnc (a b : R) k : a +i* b *+ k = (a *+ k) +i* (b *+ k).
@@ -195,7 +194,7 @@ Qed.
 
 Lemma normc_mulrn (x : C) k : normc (x *+ k) = (normc x) *+ k.
 Proof.
-by rewrite -mulr_natr normcM -[in RHS]mulr_natr normc_natmul.
+by rewrite -mulr_natr ComplexField.normcM -[in RHS]mulr_natr normc_natmul.
 Qed.
 
 Lemma gt0_normc (r : C) : 0 < r -> r = (normc r)%:C.
