@@ -67,12 +67,18 @@ Definition complex_PseudoMetricNormedZmodule :=
 
 Canonical complex_PseudoMetricNormedZmodule. 
 
-Canonical complex_normedModType := (* makes is_cvg_scaler fail ?! *)
-  NormedModType R[i] (numfield_lmodType (complex_numFieldType R))
-                (numField_normedModMixin (complex_numFieldType R)).
+(* Canonical complex_normedModType := (* makes is_cvg_scaler fail ?! *) *)
+(*   NormedModType R[i] (numfield_lmodType (complex_numFieldType R)) *)
+(*                 (numField_normedModMixin (complex_numFieldType R)). *)
+
+(* Variables (K : numFieldType) (V : normedModType K) ( k : K) ( x y : V). *)
+
+(* Fail Check ( k *: y). *)
+
+
+
 End complex_topological.
 
-Variables (K : numFieldType) (V : normedModType K) ( k : K) ( x y : V).
 
 
 Section complex_extras.
