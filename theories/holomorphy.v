@@ -21,21 +21,19 @@ file depends on *)
 
 Definition complex_lmodMixin  (R : rcfType):=
      (@numfield_lmodMixin (ComplexField.complex_numFieldType R)).
+Canonical complex_lmodType (R : rcfType) := [lmodType R[i] of R[i] for [lmodType R[i] of [numFieldType of R[i]]]].
 
-Definition complex_lmodType (R : rcfType) :=
-  LmodType R[i] R[i]  (complex_lmodMixin R).
-Canonical complex_lmodType.
+Canonical complex_lalgType (R : rcfType) :=
+ [lalgType R[i] of R[i] for [lalgType R[i] of [numFieldType of R[i]]]].
 
-Definition  complex_lalgType (R : rcfType) :=
-  LalgType R[i] R[i] (@mulrA (ComplexField.complex_ringType R)).
-Canonical complex_lalgType.
 
 Lemma scalerCAcomplex (R: rcfType) (x y z : R[i]) : x *: (y * z) = y * (x *: z).
 Proof.
  by rewrite -!numfield_scale_mul mulrA mulrA [in _ * y]mulrC.
 Qed.
 
-Canonical complex_algType (R : rcfType) := AlgType R[i] R[i] (@scalerCAcomplex R).
+Canonical complex_algType (R : rcfType) :=
+ [algType R[i] of R[i] for [algType R[i] of [numFieldType of R[i]]]].
 
 End complexLmod.
 
@@ -43,34 +41,27 @@ Section complex_topological. (*New *)
   Variable R : rcfType.
 
 Canonical numFieldType_pointedType :=
-  [pointedType of R[i] for pointed_of_zmodule (ComplexField.complex_zmodType R)].
+  [pointedType of R[i] for [pointedType of [numFieldType of R[i]]]].
 Canonical numFieldType_filteredType :=
-  [filteredType R[i] of R[i] for filtered_of_normedZmod (ComplexField.complex_normedZmodType R)].
-Canonical numFieldType_topologicalType : topologicalType := TopologicalType R[i]
-  (topologyOfBallMixin (pseudoMetric_of_normedDomain [normedZmodType R[i] of R[i]])).
+  [filteredType R[i] of R[i] for [filteredType R[i] of [numFieldType of R[i]]]].
 
-Canonical complex_pseudoMetricType := PseudoMetricType R[i]
-                 (@pseudoMetric_of_normedDomain (ComplexField.complex_numFieldType R)
-                                     (ComplexField.complex_normedZmodType R)).
+Canonical numFieldType_topologicalType : topologicalType :=
+  [topologicalType of R[i] for  [topologicalType of [numFieldType of R[i]]]].
+Canonical complex_pseudoMetricType :=
+  [pseudoMetricType [numDomainType of R[i]] of R[i] for
+  [pseudoMetricType  [numDomainType of R[i]] of [numFieldType of R[i]]]].
 
+Canonical complex_PseudoMetricNormedZmodule :=
+  [pseudoMetricNormedZmodType [numDomainType of R[i]] of R[i] for
+  [pseudoMetricNormedZmodType  [numDomainType of R[i]] of [numFieldType of R[i]]]].
 
-Lemma complex_nb :  ball  = ball_ (fun (x : R[i]) => `| x |).
-Proof. by []. Qed.
-
-Definition complex_PseudoMetricNormedZmodulemixin :=
-  PseudoMetricNormedZmodule.Mixin complex_nb.
-
-Definition complex_PseudoMetricNormedZmodule :=
-  PseudoMetricNormedZmodType R[i] R[i] complex_PseudoMetricNormedZmodulemixin.
-
-Canonical complex_PseudoMetricNormedZmodule.
 
 (* Canonical complex_normedModType := (* makes is_cvg_scaler fail ?! *) *)
 (*   NormedModType R[i] (numfield_lmodType (ComplexField.complex_numFieldType R)) *)
 (*                 (numField_normedModMixin (ComplexField.complex_numFieldType R)). *)
 
 (* Variables (K : numFieldType) (V : normedModType K) ( k : K) ( x y : V). *)
-(* Fail Check (k *: y). Check NormedModule.lmodType.  *)
+(* Fail Check (k *: y). Check NormedModule.lmodType. *)
 (* Check (k *: (y: NormedModule.lmodType V)). *)
 
 
@@ -200,7 +191,7 @@ Qed.
 Lemma gt0_normc (r : C) : 0 < r -> r = (normc r)%:C.
 Proof.
 move=> r0; have rr : r \is Num.real by rewrite realE (ltW r0).
-rewrite /normc (complexE r) /=; simpc.
+rewrite  /normc (complexE r) /=; simpc.
 rewrite (ger0_Im (ltW r0)) expr0n addr0 sqrtr_sqr gtr0_norm ?complexr0 //.
 by move: r0; rewrite {1}(complexE r) /=; simpc => /andP[/eqP].
 Qed.

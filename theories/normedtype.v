@@ -133,7 +133,7 @@ Definition pseudoMetric_of_normedDomain
   := PseudoMetricMixin ball_norm_center ball_norm_symmetric ball_norm_triangle erefl.
 End pseudoMetric_of_normedDomain.
 
-Canonical pseudoMetric_of_normedDomain. (* new. ok ? *)
+Canonical pseudoMetric_of_normedDomain. (* new. ok ? *) 
 
 Section vecspace_of_numfield. (*NEW*)
   (*Redundant with ^o *)
@@ -145,21 +145,22 @@ Definition numfield_lmodMixin :=
   mkMixin (@GRing.mulrA K) (@GRing.mul1r K) (@GRing.mulrDr K)
           (fun v a b => GRing.mulrDl a b v).
 Canonical numfield_lmodType := LmodType K K numfield_lmodMixin.
-Canonical numfield_regular_lalgType := LalgType K K (@GRing.mulrA _).
-(*Not enough to  to make _*_ and _*:_ definitionnaly equal *) (*TODO *)
-End vecspace_of_numfield.
 
-Section pseudoMetric_of_normedDomainnumField. (*NEW *)
-Variables (K : numFieldType) (R : normedZmodType K).
-Canonical normedZmodType_pointedType :=
-  [pointedType of R for pointed_of_zmodule R].
-Canonical normedZmodType_filteredType :=
-  [filteredType R of R for filtered_of_normedZmod R].
-Canonical normedZmodType_topologicalType : topologicalType :=
-  TopologicalType R (topologyOfBallMixin (pseudoMetric_of_normedDomain R)).
-Canonical normedZmodtype_pseudoMetricType := @PseudoMetric.Pack K R
-   (@PseudoMetric.Class K R (Topological.class normedZmodType_topologicalType) (@pseudoMetric_of_normedDomain K R)).
-End pseudoMetric_of_normedDomainnumField.
+Canonical numfield_lalgType := LalgType K K (@GRing.mulrA _).
+
+Lemma numfield_scale_mul  :
+  forall x y : K, x * y = x *: y. (*TODO: naming *)
+Proof. by []. Qed.
+
+Lemma scalerCA_numField (x y z : K) :
+  x *: (y * z) = y * (x *: z).
+Proof.
+ by rewrite -!numfield_scale_mul mulrA mulrA [in _ * y]mulrC.
+Qed.
+
+Canonical numfield_algType :=  AlgType K K (scalerCA_numField).
+
+End vecspace_of_numfield.
 
 
 Section numField_canonical. (*New *)
@@ -172,41 +173,26 @@ Canonical numFieldType_filteredType :=
 Canonical numFieldType_topologicalType : topologicalType := TopologicalType R
   (topologyOfBallMixin (pseudoMetric_of_normedDomain [normedZmodType R of R])).
 Canonical numFieldType_pseudoMetricType := @PseudoMetric.Pack R R
-     (@PseudoMetric.Class R R (Topological.class numFieldType_topologicalType) (@pseudoMetric_of_normedDomain R R)).
-Definition numFieldType_lalgType : lalgType R := @GRing.regular_lalgType R.
+  (@PseudoMetric.Class R R (Topological.class numFieldType_topologicalType)
+  (@pseudoMetric_of_normedDomain R R)).
 End numField_canonical.
 
 Section realField_canonical. (*New *)
-Variable R : realFieldType.
+Variable R : realFieldType. Check [numFieldType of R].
 Canonical realFieldType_pointedType :=
-  [pointedType of R for pointed_of_zmodule R].
+  [pointedType of R for [pointedType of [numFieldType of R]]].
 Canonical realFieldType_filteredType :=
-  [filteredType R of R for filtered_of_normedZmod R].
-Canonical realFieldType_topologicalType : topologicalType := TopologicalType R
-  (topologyOfBallMixin (pseudoMetric_of_normedDomain [normedZmodType R of R])).
-Canonical realFieldType_pseudoMetricType := @PseudoMetric.Pack R R
-                            (@PseudoMetric.Class R R
-                            (Topological.class realFieldType_topologicalType)
-                            (@pseudoMetric_of_normedDomain R R)).
-Definition realFieldType_lalgType : lalgType R := @GRing.regular_lalgType R.
+  [filteredType _ of R for [filteredType R of [numFieldType of _]]].
+
+Canonical realFieldType_topologicalType : topologicalType :=
+  [topologicalType of R for  [topologicalType of [numFieldType of R]]].
+Canonical realFieldType_pseudoMetricType :=
+  [pseudoMetricType _ of R for
+      [pseudoMetricType  _ of [numFieldType of R]]].
+
+Canonical realField_lmodType := [lmodType R of R for [lmodType _ of [numFieldType of R]]]. 
+
 End realField_canonical.
-
-
-Section rcfType_canonical. (* NEW *)
-Variable (K : rcfType). 
-
-Canonical rcfType_pointedType :=
-  [pointedType of K for pointed_of_zmodule K].
-Canonical rcfType_filteredType := [filteredType K of K for filtered_of_normedZmod K].
-Canonical rcfType_topologicalType := TopologicalType K
-  (topologyOfBallMixin (pseudoMetric_of_normedDomain [normedZmodType K of K])).
-Canonical rcfType_pseudoMetricType := @PseudoMetric.Pack K K
-    (@PseudoMetric.Class K K (Topological.class rcfType_topologicalType) (@pseudoMetric_of_normedDomain K K )).
-
-(* Canonical rcfType_lmodType := . *) (*TODO  *)
-(* Canonical rcfType_normedModType := .   *)
-
-End rcfType_canonical.
 
 
 Canonical R_pointedType := [pointedType of
@@ -220,7 +206,7 @@ Canonical R_pseudoMetricType : pseudoMetricType R_numDomainType :=
   PseudoMetricType Rdefinitions.R (pseudoMetric_of_normedDomain R_normedZmodType).
 
 (*Do we need the following ? Not sure*)
-Section numFieldType_vec_canonical. (*Modified *)
+Section numFieldType_regular_canonical. (*Modified *)
 Variable R : numFieldType.
 (*Canonical topological_of_numFieldType := [numFieldType of R^o].*)
 Canonical numFieldType_vec_pointedType :=
@@ -233,11 +219,9 @@ Canonical numFieldType_vec_pseudoMetricType := @PseudoMetric.Pack R R^o
            (@PseudoMetric.Class R R
                 (Topological.class numFieldType_vec_topologicalType)
                 (@pseudoMetric_of_normedDomain R R)).
-End numFieldType_vec_canonical.
+End numFieldType_regular_canonical.
 
- 
-Lemma numfield_scale_mul (K : numFieldType) : forall x y : K, x * y = x *: y. (*TODO: naming *)
-Proof. by []. Qed.
+
 
 
 Lemma locallyN (R : numFieldType) (x : R) :
@@ -402,6 +386,9 @@ Canonical numFieldType_pseudoMetricNormedZmodType :=
   @PseudoMetricNormedZmodType R R numFieldType_pseudoMetricNormedZmodMixin.
 End numFieldType_canonical_contd.
 
+Canonical realFieldType_PseudoMetricNormedZmodule (R: realFieldType) := (*New*)
+  [pseudoMetricNormedZmodType _ of R for
+      [pseudoMetricNormedZmodType  _ of [numFieldType of R]]].
 (** locally *)
 
 Section Locally.
@@ -511,8 +498,8 @@ rewrite /= opprD addrA subrr distrC subr0 ger0_norm //.
 by rewrite {2}(splitr e%:num) ltr_spaddl.
 Qed.
 
-Global Instance Proper_locally'_realType (R : realType) (x : R^o) : (* TODO: ^o out*)
-  ProperFilter (locally' x).
+Global Instance Proper_locally'_realType (R : realType) (x : R^o) :
+  ProperFilter (locally' x).  (* TODO: ^o out, need normedmodtype to deal with locally'?*)
 Proof. exact: Proper_locally'_numFieldType. Qed.
 
 (** * Some Topology on [Rbar] *)
@@ -2019,7 +2006,7 @@ Canonical AbsRing_NormedModType (K : absRingType) :=
 
 
 
-Section NormedMod_of_numfield. (* NEW  !*)
+Section NormedMod_of_numfield. (* NEW  !*) (*TODO: correct *)
 
 Lemma numField_normZ (R : numFieldType) (l : R) (x : R) :
   `| l *: x | = `| l | * `| x |.
@@ -2041,14 +2028,15 @@ Definition numField_normedModMixin := NormedModMixin (@numField_normZ R).
 Definition numField_normedModType :=
   NormedModType R (numfield_lmodType R) numField_normedModMixin.
 
-(*TODO: if numField_normedModType is canonical the lmodType structure on any
+End NormedMod_of_numfield.
+
+(* TODO : if numField_normedModType is canonical the lmodType structure on any
  (V :  normedModType R ) fails *)
 
 (* Canonical numField_normedModType. *)
-(* Variables  (V : normedModType R) (x : R) (w : V). *)
+(* Variables (R : numFieldType)  (V : normedModType R) (x : R) (w : V). *)
 (* Fail Check (x *: w). *)
 
-End NormedMod_of_numfield.
 
 
 (** Normed vector spaces have some continuous functions *)
