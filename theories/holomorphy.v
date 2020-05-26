@@ -363,25 +363,14 @@ case: (EM (v = 0)) => [eqv0|/eqP vneq0].
   + by apply: cvgZr.
 Qed.
 
-(*The fact that the topological structure is only available on C^o 
+(*The fact that the topological structure is only available on C^o
 makes iterations of C^o apply *)
 
 (*The equality between 'i as imaginaryC from ssrnum and 'i is not transparent:
  neq0ci is part of ssrnum and uneasy to find *)
 
-
-
-Lemma holo_CauchyRieman (f : C^o -> C^o) c: holomorphic f c -> CauchyRiemanEq f c.
+Lemma properlocR0 : ProperFilter (within Real_line (locally' 0)).
 Proof.
-move=> /cvg_ex ; rewrite /type_of_filter /= /CauchyRiemanEq.
-pose quotC := fun h => h^-1 *: ((f \o shift c) (h) - f c).
-pose quotR := fun h => h^-1 *: ((f \o shift c) (h * 'i) - f c).
-pose locR0 := within Real_line (locally' 0).
-have -> :  within Real_line (locally' 0) = locR0  by [].
-have -> :  (fun h  => h^-1 *: ((f \o shift c) (h * 'i) - f c)) = quotR by [].
-have -> :  (fun h  => h^-1 *: ((f \o shift c) (h) - f c)) = quotC by [].
-move => [l H].
-have properlocR0 : ProperFilter (locR0).
   apply: Build_ProperFilter.
   move => P [[r1 r2] ler] /= b.
   move: ler; rewrite ltcE /= => /andP [r20 r10].
@@ -400,12 +389,23 @@ have properlocR0 : ProperFilter (locR0).
     have r1n0: r1 != 0 by apply: lt0r_neq0.
     have: (r1 / 2)%:C != 0.
     rewrite (neqCr0 (r1/2)); apply mulf_neq0.
-      by []. 
+      by [].
       by apply:invr_neq0.
       by move => /h {h} {r10}; rewrite /Real_line /= => h; apply: (h _).
-      have HR0: cvg (quotC @ locR0).
-       by apply: is_cvg_within ;  apply/cvg_ex; exists l.
-      have lem : quotC \o  *%R^~ 'i%R @ locR0 --> l.
+Qed.
+
+Lemma holo_CauchyRieman (f : C^o -> C^o) c: holomorphic f c -> CauchyRiemanEq f c.
+Proof.
+move=> /cvg_ex ; rewrite /type_of_filter /= /CauchyRiemanEq.
+pose quotC := fun h => h^-1 *: ((f \o shift c) (h) - f c).
+pose quotR := fun h => h^-1 *: ((f \o shift c) (h * 'i) - f c).
+pose locR0 := within Real_line (locally' 0).
+have -> :  within Real_line (locally' 0) = locR0  by [].
+have -> :  (fun h  => h^-1 *: ((f \o shift c) (h * 'i) - f c)) = quotR by [].
+have -> :  (fun h  => h^-1 *: ((f \o shift c) (h) - f c)) = quotC by [].
+move => [l H].
+have HR0: cvg (quotC @ locR0) by apply: is_cvg_within ;  apply/cvg_ex; exists l.
+have lem : quotC \o  *%R^~ 'i%R @ locR0 --> l.
   apply: cvg_comp.
   2:  exact H.
   move => A /=; simpl in (type of A).
@@ -427,13 +427,55 @@ have ->: lim (quotR @ locR0) = 'i *: lim (quotC \o ( fun h => h *'i) @ locR0).
     by rewrite neq0Ci.
 by move => /funext <-; rewrite (limin_scaler properlocR0 'i HRcomp).
 rewrite scaleC_mul.
-suff: lim (quotC @ locR0) = lim (quotC \o  *%R^~ 'i%R @ locR0) by move => -> .
-have: (quotC @ locR0) --> l  by apply: cvg_within_filter.
-move => /cvg_lim ->.
-  by move: lem => /cvg_lim ->.
-  by apply: norm_hausdorff.
+suff: lim (quotC @ locR0) = lim (quotC \o  *%R^~ 'i%R @ locR0) by move => -> . 
+have -> : lim (quotC @ locR0) = l. 
+apply/cvg_lim; first by apply: norm_hausdorff.
+  by apply:fmap_proper_filter; exact: properlocR0.
+  by apply: cvg_within_filter.
+have -> :  lim (quotC \o  *%R^~ 'i%R @ locR0) = l.      
+  apply/cvg_lim; first by apply: norm_hausdorff.
+  by apply:fmap_proper_filter; exact: properlocR0.
+  by [].
+by []. 
 Qed.
 
+Lemma Diff_CR_holo (f : C^o -> C^o) :
+  (forall c v : C^o, Rderivable_fromcomplex f c v) /\ (forall c : C^o, CauchyRiemanEq f c)
+  -> (forall c: C^o, (holomorphic f c)).
+  move => [der CR] c.
+pose quotC := fun (h : C^o) => h^-1 *: ((f \o shift c) (h) - f c).
+pose locR0 := within Real_line (locally' 0).
+
+suff :  exists l, forall h : C,
+      f (c + h) = f c + h * l + (('o_ (0 : [filteredType C^o of C^o]) id) : _ -> C^o ) h.
+  admit.
+(*This should be a lemma *)
+move: (der c 1%:C ); simpl => /cvg_ex [lr /cvg_lim //= Dlr]. Check (Dlr (@norm_hausdorff _ _)).  => Dlr. 
+move: (der c 'i); simpl  => /cvg_ex [li /cvg_lim //= Dli].
+simpl in (type of lr); simpl in (type of Dlr).
+simpl in (type of li); simpl in (type of Dli).
+move : (CR c) ; rewrite /CauchyRiemanEq //= Dlr // Dli // => CRc.
+pose l:= ((lr + lr*'i)) ; exists l; move  => [a b].
+move: (der (c + a%:C)  'i); simpl => /cvg_ex [//= la /cvg_lim //= Dla].
+move: (der (c + a%:C) 'i) => /derivable_locallyxP.
+have Htmp : ProperFilter ((fun h : R => h^-1 *: (f (h *: 'i%C + (c + a%:C)) - f (c + a%:C))) @ locally' (0:R^o)).
+  by apply fmap_proper_filter; apply Proper_locally'_numFieldType.
+move: (Dla (@norm_hausdorff _ _) Htmp) => {}Dla.
+rewrite /derive //= Dla => oR.
+have -> : (a +i* b) = (a%:C + b*: 'i%C) by simpc.
+rewrite addrA oR.
+(*have fun a => la = cst(lr) + o_0(a). *)
+move: (der c 1%:C); simpl => /derivable_locallyxP ; rewrite /derive //= Dlr => oC.
+(* rewrite [a%:C]/(a *: 1%:C). *)
+have -> : a%:C = (a *: 1%:C) by simpc.
+rewrite oC. Print real_complex.
+rewrite /type_of_filter /= in la Dla oR *.
+have lem : ('o_ (0 : [filteredType R^o of R^o]) (@real_complex _ : _ -> numFieldType_normedModType (complex_numFieldType R) (*IMP*))) =
+           (fun a => (la - lr : C^o)).
+move => s0.  Check eqoE.
+Fail suff :   (fun _ : R => la - lr) = 'a_o_[filter of locally (0:R)] (real_complex R).
+(* admit. *)
+(* move => s1. *)
 
 (** Previous formalisation without within and with Rcomplex **)
 
