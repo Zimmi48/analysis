@@ -443,30 +443,39 @@ Lemma Diff_CR_holo (f : C^o -> C^o) :
   (forall c v : C^o, Rderivable_fromcomplex f c v) /\ (forall c : C^o, CauchyRiemanEq f c)
   -> (forall c: C^o, (holomorphic f c)).
   move => [der CR] c.
-pose quotC := fun (h : C^o) => h^-1 *: ((f \o shift c) (h) - f c).
 pose locR0 := within Real_line (locally' 0).
-
 suff :  exists l, forall h : C,
       f (c + h) = f c + h * l + (('o_ (0 : [filteredType C^o of C^o]) id) : _ -> C^o ) h.
   admit.
 (*This should be a lemma *)
-move: (der c 1%:C ); simpl => /cvg_ex [lr /cvg_lim //= Dlr]. Check (Dlr (@norm_hausdorff _ _)).  => Dlr. 
-move: (der c 'i); simpl  => /cvg_ex [li /cvg_lim //= Dli].
-simpl in (type of lr); simpl in (type of Dlr).
-simpl in (type of li); simpl in (type of Dli).
-move : (CR c) ; rewrite /CauchyRiemanEq //= Dlr // Dli // => CRc.
+move: (der c 1%:C ); simpl => /cvg_ex [//= lr /cvg_lim //= ].
+simpl in (type of lr).
+set quotC := (X in (X @ _)). 
+have properC:  ProperFilter (quotC @ within Real_line (locally' 0)).
+ by apply fmap_proper_filter; apply: properlocR0.
+move => /= Dlr; move : (Dlr (@norm_hausdorff _ _) properC) => {Dlr} Dlr. 
+
+move: (der c 'i); simpl  => /cvg_ex [li /cvg_lim //= ].
+simpl in (type of li).
+set quoti := (X in ((X @ _ ))).
+have properi:  ProperFilter (quoti @ within Real_line (locally' 0)).
+ by apply fmap_proper_filter; apply: properlocR0.
+move => /= Dli; move : (Dli (@norm_hausdorff _ _) properi) => {Dli} Dli.
+move => u s. 
 pose l:= ((lr + lr*'i)) ; exists l; move  => [a b].
-move: (der (c + a%:C)  'i); simpl => /cvg_ex [//= la /cvg_lim //= Dla].
-move: (der (c + a%:C) 'i) => /derivable_locallyxP.
-have Htmp : ProperFilter ((fun h : R => h^-1 *: (f (h *: 'i%C + (c + a%:C)) - f (c + a%:C))) @ locally' (0:R^o)).
-  by apply fmap_proper_filter; apply Proper_locally'_numFieldType.
-move: (Dla (@norm_hausdorff _ _) Htmp) => {}Dla.
-rewrite /derive //= Dla => oR.
-have -> : (a +i* b) = (a%:C + b*: 'i%C) by simpc.
-rewrite addrA oR.
-(*have fun a => la = cst(lr) + o_0(a). *)
-move: (der c 1%:C); simpl => /derivable_locallyxP ; rewrite /derive //= Dlr => oC.
-(* rewrite [a%:C]/(a *: 1%:C). *)
+
+move: (der (c + a%:C)  'i); simpl => /cvg_ex [//= la /cvg_lim //= ].
+simpl in (type of la).
+set quota := (X in ((X @ _ ))).
+have propera:  ProperFilter (quota @ within Real_line (locally' 0)).
+ by apply fmap_proper_filter; apply: properlocR0.
+move => /= Dla; move : (Dla (@norm_hausdorff _ _) propera) => {Dla} Dla.
+have lar : la = lr. admit.
+
+have fca : f (c + a +i* b) = f(c + a%:C) + 'i * (b%:C) * lr +  [o_[filter of 0] id of _] ('i * b).
+(* move: (der c 1%:C); simpl => /derivable_locallyxP ; 
+  rewrite /derive //= Dlr => oC. *)
+(* rewrite [a%:C]/(a *: 1%:C). *) 
 have -> : a%:C = (a *: 1%:C) by simpc.
 rewrite oC. Print real_complex.
 rewrite /type_of_filter /= in la Dla oR *.
