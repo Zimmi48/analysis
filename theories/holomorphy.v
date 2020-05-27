@@ -260,7 +260,7 @@ Canonical C_filteredType.
 End complex_extras.
 
 
-Section Holomorphe.
+Section Holomorphe_der.
 Variable R : rcfType.
 
 Local Notation sqrtr := Num.sqrt.
@@ -293,6 +293,9 @@ Qed.
 
 Definition holomorphic (f : C^o -> C^o) (c : C^o) :=
   cvg ((fun (h : C^o) => h^-1 *: ((f \o shift c) h - f c)) @ (locally' (0:C^o))).
+
+Lemma holomorphicP f c : holomorphic f c <-> (forall v, derivable f c v). (*TODO*)
+Admitted.
 
 Definition Real_line (c:C^o) := (Im c = 0).
 
@@ -438,53 +441,154 @@ have -> :  lim (quotC \o  *%R^~ 'i%R @ locR0) = l.
   by [].
 by []. 
 Qed.
+ 
+End Holomorphe_der.
 
-Lemma Diff_CR_holo (f : C^o -> C^o) :
-  (forall c v : C^o, Rderivable_fromcomplex f c v) /\ (forall c : C^o, CauchyRiemanEq f c)
-  -> (forall c: C^o, (holomorphic f c)).
-  move => [der CR] c.
-pose locR0 := within Real_line (locally' 0).
-suff :  exists l, forall h : C,
-      f (c + h) = f c + h * l + (('o_ (0 : [filteredType C^o of C^o]) id) : _ -> C^o ) h.
-  admit.
-(*This should be a lemma *)
-move: (der c 1%:C ); simpl => /cvg_ex [//= lr /cvg_lim //= ].
-simpl in (type of lr).
-set quotC := (X in (X @ _)). 
-have properC:  ProperFilter (quotC @ within Real_line (locally' 0)).
- by apply fmap_proper_filter; apply: properlocR0.
-move => /= Dlr; move : (Dlr (@norm_hausdorff _ _) properC) => {Dlr} Dlr. 
+Module CR_holo.
+Variable (R: rcfType).
+Notation C := R[i].
 
-move: (der c 'i); simpl  => /cvg_ex [li /cvg_lim //= ].
-simpl in (type of li).
-set quoti := (X in ((X @ _ ))).
-have properi:  ProperFilter (quoti @ within Real_line (locally' 0)).
- by apply fmap_proper_filter; apply: properlocR0.
-move => /= Dli; move : (Dli (@norm_hausdorff _ _) properi) => {Dli} Dli.
-move => u s. 
-pose l:= ((lr + lr*'i)) ; exists l; move  => [a b].
+Program Definition pseudometricmixin_of_normaxioms (V : lmodType R) (norm : V -> R)
+  (ax1 : forall x y : V, norm (x + y) <= norm x + norm y)
+  (ax2 : forall (l : R) (x : V), norm (l *: x) = `|l| * (norm x))
+  (ax4 : forall x : V, norm x = 0 -> x = 0 ) : PseudoMetric.mixin_of _ (locally_ (ball_ norm)) :=
+  @PseudoMetric.Mixin _ V (locally_ (ball_ norm))  (ball_ norm) _ _ _ _.
+Next Obligation.
+move => V norm _ H _; rewrite /ball_ => x e.
+rewrite subrr.
+suff -> : norm 0 = 0 by [].
+have -> : 0 = 0 *: x by rewrite scale0r.
+by rewrite H normr0 mul0r.
+Qed.
+Next Obligation.
+move => V norm _ H _ ; rewrite /ball_ => x e e0.
+have -> : x - e = (-1) *: (e - x) by rewrite -opprB scaleN1r.
+by rewrite (H (-1) (e - x)) normrN1 mul1r.
+Qed.
+Next Obligation.
+move => V norm H _ _ ; rewrite /ball_ => x y z e1 e2 normxy normyz.
+by rewrite (subr_trans y) (le_lt_trans (H  _ _)) ?ltr_add.
+Qed.
+Next Obligation. by []. Qed.
 
-move: (der (c + a%:C)  'i); simpl => /cvg_ex [//= la /cvg_lim //= ].
-simpl in (type of la).
-set quota := (X in ((X @ _ ))).
-have propera:  ProperFilter (quota @ within Real_line (locally' 0)).
- by apply fmap_proper_filter; apply: properlocR0.
-move => /= Dla; move : (Dla (@norm_hausdorff _ _) propera) => {Dla} Dla.
-have lar : la = lr. admit.
+Definition Rcomplex_pseudoMetricMixin :=
+  @pseudometricmixin_of_normaxioms (Rcomplex_lmodType R) (@normc R) (@normcD _) (@normcZ _) (@eq0_normc _).
+Definition Rcomplex_topologicalMixin := topologyOfBallMixin Rcomplex_pseudoMetricMixin.
+Canonical Rcomplex_topologicalType :=
+  TopologicalType (Rcomplex R) Rcomplex_topologicalMixin.
+Canonical Rcomplex_pseudoMetricType := PseudoMetricType (Rcomplex R) Rcomplex_pseudoMetricMixin.
+Definition Rcomplex_normedMixin :=
+  @Num.NormedMixin _ _ _ _ (@normcD R) (@eq0_normc _) (@normc_mulrn _) (@normcN _).
+Canonical Rcomplex_normedZmodType := NormedZmodType R (Rcomplex R) Rcomplex_normedMixin.
 
-have fca : f (c + a +i* b) = f(c + a%:C) + 'i * (b%:C) * lr +  [o_[filter of 0] id of _] ('i * b).
-(* move: (der c 1%:C); simpl => /derivable_locallyxP ; 
-  rewrite /derive //= Dlr => oC. *)
-(* rewrite [a%:C]/(a *: 1%:C). *) 
-have -> : a%:C = (a *: 1%:C) by simpc.
-rewrite oC. Print real_complex.
-rewrite /type_of_filter /= in la Dla oR *.
-have lem : ('o_ (0 : [filteredType R^o of R^o]) (@real_complex _ : _ -> numFieldType_normedModType (complex_numFieldType R) (*IMP*))) =
-           (fun a => (la - lr : C^o)).
-move => s0.  Check eqoE.
-Fail suff :   (fun _ : R => la - lr) = 'a_o_[filter of locally (0:R)] (real_complex R).
-(* admit. *)
-(* move => s1. *)
+Lemma Rcomplex_ball_ball_ :
+  @ball _ (Rcomplex_pseudoMetricType ) = ball_ (fun x => `| x |).
+Proof. by []. Qed.
+
+Definition Rcomplex_pseudoMetricNormedZmodMixin :=
+  PseudoMetricNormedZmodule.Mixin Rcomplex_ball_ball_.
+Canonical Rcomplex_pseudoMetricNormedZmodType :=
+  PseudoMetricNormedZmodType R (Rcomplex R) Rcomplex_pseudoMetricNormedZmodMixin.
+
+Definition Rcomplex_normedModMixin :=
+  @NormedModMixin R (Rcomplex_pseudoMetricNormedZmodType)  _ (@normcZ _).
+Canonical Rcomplex_normedModType :=
+  NormedModType R (Rcomplex R) Rcomplex_normedModMixin.
+
+Lemma scalecAl (h : R) (x y : Rcomplex_normedModType) : h *: (x * y) = h *: x * y.
+Proof.
+by move: h x y => h [a b] [c d]; simpc; rewrite -!mulrA -mulrBr -mulrDr.
+Qed.
+
+Definition C_RLalg := LalgType R (Rcomplex R) scalecAl.
+
+Definition locR0 := (within (@Real_line R) (locally' 0)).
+
+Lemma Rdiff_withinR (f : C^o -> C^o) c:
+  ('D_1 (f: (Rcomplex R) -> (Rcomplex R))  c
+   =  lim ( (fun h : C^o => h^-1 *: ((f \o shift c) (h) - f c)) @ locR0)).
+Admitted.
+
+
+Lemma Rdiff_withini (f : C^o -> C^o) c:
+  ('D_('i) (f : (Rcomplex R) -> (Rcomplex R))  c =
+      lim ((fun h : C^o => h^-1 *: ((f \o shift c) (h * 'i) - f c)) @ locR0 )).
+Proof. Admitted.
+
+Lemma Rdiff_lim (f : C^o -> C^o) c v:
+  (Rderivable_fromcomplex f c v) <->
+  (derivable (f : (Rcomplex R) -> (Rcomplex R)) c v).
+Proof.
+Admitted.
+
+
+Lemma Diff_CR_holo (f : C^o -> C^o) c:
+  (forall v : C^o, Rderivable_fromcomplex f c v) /\ (CauchyRiemanEq f c)
+  -> (holomorphic f c).
+  Proof.
+move => [der CR].
+suff :  forall h : C^o,
+      f (c + h) = f c + h * 'D_1 f c  +
+      (('o_ (0 : [filteredType C^o of C^o]) id ) : _
+-> numFieldType_normedModType (complex_numFieldType R) ) h .
+  move => /= H; apply/holomorphicP => /= v; rewrite derivable_locallyxP  => /= h0.
+  rewrite  !scaleC_mul.
+  Check (H _ _ (h0 * v)). admit. (*landau ... *)
+move => u s [x y].
+move/Rdiff_lim : (der (x +i* y)) ; rewrite derivable_locallyxP; move/(_ 1).
+rewrite !scale1r.
+have -> :  'D_(x +i* y) (f : (Rcomplex R) -> (Rcomplex R))  c =
+           x *: 'D_1 (f : (Rcomplex R) -> (Rcomplex R))  c
+           + y *: 'D_('i) (f : (Rcomplex R) -> (Rcomplex R))  c.
+admit.
+have <- : 'i * 'D_1 (f : (Rcomplex R) -> (Rcomplex R))  c =
+         'D_('i) (f : (Rcomplex R) -> (Rcomplex R))  c.
+by rewrite Rdiff_withinR Rdiff_withini.
+have lem: (x *: 'D_1 f c + y *: ('i * 'D_1 f c)) = (x +i* y) * 'D_1 f c. admit.
+Fail rewrite [in RHS]lem. (*ARGH*)
+Admitted.
+
+
+ (* suff :  exists l, exists (eps : C^o -> C^o), forall h : C^o, *)
+(*       f (c + h) = f c + h * l + eps(h) * h /\ (eps @ (locally' (0 : C^o)) --> locally (0: C^o)). *)
+(* move => /= [l [ eps  H]] ;  apply/holomorphicP => /= v; rewrite derivable_locallyxP => /= h.  *)
+(* rewrite  !scaleC_mul. *)
+(* move: (der 1%:C ); simpl => /cvg_ex [//= lr /cvg_lim //= ]. *)
+(* simpl in (type of lr). *)
+(* set quotC := (X in (X @ _)).  *)
+(* have properC:  ProperFilter (quotC @ locR0). *)
+(*  by apply fmap_proper_filter; apply: properlocR0. *)
+(* move/(_ (@norm_hausdorff _ _ ) properC) => Dlr. *)
+(* move: (der 'i); simpl  => /cvg_ex [li /cvg_lim //= ].  *)
+(* simpl in (type of li). *)
+(* set quoti := (X in ((X @ _ ))). *)
+(* simpl in (type of quoti). *)
+(* have properi:  ProperFilter (quoti @ locR0). *)
+(*   by apply fmap_proper_filter; apply: properlocR0. *)
+(* move/(_ (@norm_hausdorff _ _ ) properi) => Dli.  *)
+
+ 
+(* (* move: (der (c + a%:C)  'i); simpl => /cvg_ex [//= la /cvg_lim //= ]. *) *)
+(* (* simpl in (type of la). *) *)
+(* (* set quota := (X in ((X @ _ ))). *) *)
+(* (* have propera:  ProperFilter (quota @ within Real_line (locally' 0)). *) *)
+(* (*  by apply fmap_proper_filter; apply: properlocR0. *) *)
+(* (* move/(_ (@norm_hausdorff _ _ ) propera) => Dla. *) *)
+(* (* have lar : la = lr. admit. *) *)
+
+(* have fca : f (c + a +i* b) = f(c + a%:C) + 'i * (b%:C) * lr +  [o_[filter of 0] id of _] ('i * b). *)
+(* (* move: (der c 1%:C); simpl => /derivable_locallyxP ;  *)
+(*   rewrite /derive //= Dlr => oC. *) *)
+(* (* rewrite [a%:C]/(a *: 1%:C). *)  *)
+(* have -> : a%:C = (a *: 1%:C) by simpc. *)
+(* rewrite oC. Print real_complex. *)
+(* rewrite /type_of_filter /= in la Dla oR *. *)
+(* have lem : ('o_ (0 : [filteredType R^o of R^o]) (@real_complex _ : _ -> numFieldType_normedModType (complex_numFieldType R) (*IMP*))) = *)
+(*            (fun a => (la - lr : C^o)). *)
+(* move => s0.  Check eqoE. *)
+(* Fail suff :   (fun _ : R => la - lr) = 'a_o_[filter of locally (0:R)] (real_complex R). *)
+(* (* admit. *) *)
+(* (* move => s1. *) *)
 
 (** Previous formalisation without within and with Rcomplex **)
 
