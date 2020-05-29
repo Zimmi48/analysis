@@ -1,4 +1,4 @@
-(* mathcomp analysis (c) 2017 Inria and AIST. License: CeCILL-C.              *)
+(* mathcomp analysis (c) 2017 Inria and AIST. License: CeCILL-C.              *) 
 From mathcomp Require Import ssreflect ssrfun ssrbool.
 From mathcomp Require Import ssrnat eqtype choice fintype bigop order ssralg ssrnum.
 From mathcomp Require Import complex.
@@ -533,46 +533,51 @@ Check nearE.
 Lemma my_derivable_locallyxP (K: numFieldType) (V W: normedModType K) (f: V ->  W) (c v: V) :
   derivable f c v <-> ((forall eps , 0 < eps -> \forall h \near (locally (0: K^o)), `|f (c + h *: v) - (f c) - 'D_c f (h *:v)| <= eps * `|h|)).
 Admitted.
-
-Search _ ( continuous _ ) (\forall _  \near _ , _ ).  
-
-Print continuous. 
+  
+Check derivable_locallyxP. 
 
 Lemma continuous_near (T U: topologicalType) (f: T -> U) (P : set U) (a : T):
-  continuous f  -> ((\forall x \near (f a), P x)  -> (\forall y \near a, (P \o f) y)).   
-Admitted.
+ (f @ a --> f a) -> ((\forall x \near locally (f a), P x)
+                           -> (\forall y \near locally a, P (f y))).
+Proof.  by move/(_ P) => /=; near_simpl. Qed.
 
+Lemma holomorphic_locallyxP  (f: C^o -> C^o) (c: C^o): (forall (eps: C), 0 < eps
+  -> (\forall h \near (locally (0:C^o)),`|(f (c + h) - f c - 'D_c f h)| <= eps * `|h|))
+  -> holomorphic f c.
+Proof. (* use continuous_near ? *)
+  move => H ;apply/holomorphicP => /= v; rewrite my_derivable_locallyxP /= => eps eps0.
+    case (EM (`|v| == 0)).
+    - rewrite normr_eq0 ; move => /eqP ->. admit.
+    - rewrite normr_eq0 ; move => /negP ; rewrite -normr_gt0 => lev0.
+      have leepsv0: 0 < eps / `|v|  by apply divr_gt0.
+      rewrite nearE.  move: {H}  (H (eps /`|v|) leepsv0) => [r r0 H].
+      exists (r / `|v|); first by apply divr_gt0 .
+      move => /= h; rewrite sub0r normrN ltr_pdivl_mulr; last by [].
+      move: (H (h *: v)).  simpl. rewrite sub0r.  rewrite normrN /= (normmZ h v) mulrC -mulrA.
+      have -> : `|v|^-1 * (`|v| * `|h|) = `|h|. rewrite mulrA mulVf. by rewrite mul1r.  admit.
+      by [].
+Admitted.
 
 Lemma Diff_CR_holo (f : C^o -> C^o) c:
   (forall v : C^o, Rderivable_fromcomplex f c v) /\ (CauchyRiemanEq f c)
   -> (holomorphic f c).
   Proof.
-    move => [der CR].
-    suff :  (forall eps , 0 < eps -> (locally (0: C^o)) (fun (h : C^o) =>
-                  `|(f (c + h) - f c - 'D_c f h)| <= eps * `| h|)).  (* unable to use near *)
-    move => /= H; apply/holomorphicP => /= v; rewrite my_derivable_locallyxP => /= eps eps0.
-    case (EM (`|v| == 0)). 
-    - rewrite normr_eq0 ; move => /eqP ->. admit.
-    - rewrite normr_eq0 ; move => /negP ; rewrite -normr_gt0 => lev0.
-      have leepsv0: 0 < eps / `|v|  by apply divr_gt0.
-      rewrite nearE.  move: {H}  (H (eps /`|v|) leepsv0) => [r r0 H].
-      exists (r / `|v|); first by apply divr_gt0 . 
-      move => /= h; rewrite sub0r normrN ltr_pdivl_mulr; last by [].
-      move: (H (h *: v)).  simpl. rewrite sub0r.  rewrite normrN /= (normmZ h v) mulrC -mulrA.
-      have -> : `|v|^-1 * (`|v| * `|h|) = `|h|. rewrite mulrA mulVf. by rewrite mul1r.  admit. 
-      by [].
-move => u s [x y].
-move/Rdiff_lim : (der (x +i* y)) ; rewrite derivable_locallyxP; move/(_ 1).
+Check Rdiff_lim.
+move=> [der CR].
+apply: holomorphic_locallyxP => eps eps0.
+near=> h. 
+move/Rdiff_lim : (der h) ; rewrite derivable_locallyxP; move/(_ 1).
 rewrite !scale1r.
-have -> :  'D_(x +i* y) (f : (Rcomplex R) -> (Rcomplex R))  c =
+case h=> x y.   
+have lemx :  'D_(x +i* y) (f : (Rcomplex R) -> (Rcomplex R))  c =
            x *: 'D_1 (f : (Rcomplex R) -> (Rcomplex R))  c
            + y *: 'D_('i) (f : (Rcomplex R) -> (Rcomplex R))  c.
 admit.
-have <- : 'i * 'D_1 (f : (Rcomplex R) -> (Rcomplex R))  c =
+have lemi : 'i * 'D_1 (f : (Rcomplex R) -> (Rcomplex R))  c =
          'D_('i) (f : (Rcomplex R) -> (Rcomplex R))  c.
 by rewrite Rdiff_withinR Rdiff_withini.
 have lem: (x *: 'D_1 f c + y *: ('i * 'D_1 f c)) = (x +i* y) * 'D_1 f c. admit.
-Fail rewrite [in RHS]lem. (*ARGH*)
+
 Admitted.
 
 
