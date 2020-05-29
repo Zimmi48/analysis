@@ -526,19 +526,41 @@ Lemma Rdiff_lim (f : C^o -> C^o) c v:
   (derivable (f : (Rcomplex R) -> (Rcomplex R)) c v).
 Proof.
 Admitted.
+  
+Check derivable_locallyxP.   Check eqaddoP.
+Check nearE. 
+
+Lemma my_derivable_locallyxP (K: numFieldType) (V W: normedModType K) (f: V ->  W) (c v: V) :
+  derivable f c v <-> ((forall eps , 0 < eps -> \forall h \near (locally (0: K^o)), `|f (c + h *: v) - (f c) - 'D_c f (h *:v)| <= eps * `|h|)).
+Admitted.
+
+Search _ ( continuous _ ) (\forall _  \near _ , _ ).  
+
+Print continuous. 
+
+Lemma continuous_near (T U: topologicalType) (f: T -> U) (P : set U) (a : T):
+  continuous f  -> ((\forall x \near (f a), P x)  -> (\forall y \near a, (P \o f) y)).   
+Admitted.
 
 
 Lemma Diff_CR_holo (f : C^o -> C^o) c:
   (forall v : C^o, Rderivable_fromcomplex f c v) /\ (CauchyRiemanEq f c)
   -> (holomorphic f c).
   Proof.
-    move => [der CR]. 
-    suff :  (forall eps , 0 < eps -> \forall h \near (locally (0: C^o)),
-                  `|(f \o shift c - f) h| <= eps * `| h|).  
-    move => /= H; apply/holomorphicP => /= v; rewrite derivable_locallyxP   => /= h0.
-    Check (eqaddoP  (FilterType [filter of locally 0] _ )).
-    rewrite  !scaleC_mul. 
-  apply:  (H _ _ (h0 * v)). admit. (*landau ... *)
+    move => [der CR].
+    suff :  (forall eps , 0 < eps -> (locally (0: C^o)) (fun (h : C^o) =>
+                  `|(f (c + h) - f c - 'D_c f h)| <= eps * `| h|)).  (* unable to use near *)
+    move => /= H; apply/holomorphicP => /= v; rewrite my_derivable_locallyxP => /= eps eps0.
+    case (EM (`|v| == 0)). 
+    - rewrite normr_eq0 ; move => /eqP ->. admit.
+    - rewrite normr_eq0 ; move => /negP ; rewrite -normr_gt0 => lev0.
+      have leepsv0: 0 < eps / `|v|  by apply divr_gt0.
+      rewrite nearE.  move: {H}  (H (eps /`|v|) leepsv0) => [r r0 H].
+      exists (r / `|v|); first by apply divr_gt0 . 
+      move => /= h; rewrite sub0r normrN ltr_pdivl_mulr; last by [].
+      move: (H (h *: v)).  simpl. rewrite sub0r.  rewrite normrN /= (normmZ h v) mulrC -mulrA.
+      have -> : `|v|^-1 * (`|v| * `|h|) = `|h|. rewrite mulrA mulVf. by rewrite mul1r.  admit. 
+      by [].
 move => u s [x y].
 move/Rdiff_lim : (der (x +i* y)) ; rewrite derivable_locallyxP; move/(_ 1).
 rewrite !scale1r.
