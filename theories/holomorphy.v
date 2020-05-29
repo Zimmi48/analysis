@@ -334,9 +334,9 @@ case: (EM (v = 0)) => [eqv0|/eqP vneq0].
     by  exists 1=> // h _ _ ; rewrite /quotR /shift eqv0 /= scaler0 add0r addrN mulr0.
   apply: cvg_trans.
   + exact (near_eq_cvg eqnear0).
-  + apply: (cvg_cst (0 : C^o)).
+  + apply: (cvg_cst (0 : C^o)). 
 - apply: (cvgP (v *: l)).
-  have eqnear0 : {near (locR0), (v \*: quotC) \o mulv =1 quotR}.
+  have eqnear0 : {near (locR0), (v \*: quotC) \o mulv =1 quotR}. 
     exists 1 => // h _ neq0h //=; rewrite /quotC /quotR /mulv invrM /=.
     (*hiatus invrM and scale_inv *)
     rewrite scalerAl scalerCA  mulrA -(mulrC v) mulrA // divff.
@@ -507,6 +507,12 @@ Definition locR0 := (within (@Real_line R) (locally' 0)).
 Lemma Rdiff_withinR (f : C^o -> C^o) c:
   ('D_1 (f: (Rcomplex R) -> (Rcomplex R))  c
    =  lim ( (fun h : C^o => h^-1 *: ((f \o shift c) (h) - f c)) @ locR0)).
+Proof.
+  rewrite /derive.
+  pose quotC (h : C^o) : C^o := h^-1 *: ((f \o shift c) h - f c).
+  set quotR := (X in ((X @ _ ))) .
+  simpl in (type of quotR). 
+  rewrite -/quotC -/quotR.
 Admitted.
 
 
@@ -526,14 +532,13 @@ Lemma Diff_CR_holo (f : C^o -> C^o) c:
   (forall v : C^o, Rderivable_fromcomplex f c v) /\ (CauchyRiemanEq f c)
   -> (holomorphic f c).
   Proof.
-move => [der CR].
-suff :  forall h : C^o,
-      f (c + h) = f c + h * 'D_1 f c  +
-      (('o_ (0 : [filteredType C^o of C^o]) id ) : _
--> numFieldType_normedModType (complex_numFieldType R) ) h .
-  move => /= H; apply/holomorphicP => /= v; rewrite derivable_locallyxP  => /= h0.
-  rewrite  !scaleC_mul.
-  Check (H _ _ (h0 * v)). admit. (*landau ... *)
+    move => [der CR]. 
+    suff :  (forall eps , 0 < eps -> \forall h \near (locally (0: C^o)),
+                  `|(f \o shift c - f) h| <= eps * `| h|).  
+    move => /= H; apply/holomorphicP => /= v; rewrite derivable_locallyxP   => /= h0.
+    Check (eqaddoP  (FilterType [filter of locally 0] _ )).
+    rewrite  !scaleC_mul. 
+  apply:  (H _ _ (h0 * v)). admit. (*landau ... *)
 move => u s [x y].
 move/Rdiff_lim : (der (x +i* y)) ; rewrite derivable_locallyxP; move/(_ 1).
 rewrite !scale1r.
