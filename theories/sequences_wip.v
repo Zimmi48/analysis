@@ -104,7 +104,7 @@ rewrite (_ : (fun _ => _) = (fun n => (m%:R^-1) ^+n)); last first.
   by rewrite funeqE => n; rewrite natrX exprVn.
 apply cvg_expr.
 rewrite invr_ge0 ler0n /= invr_lt1 ?ltr1n // ?ltr0n ?(ltn_trans _ m1) //.
-by rewrite unitfE pnatr_eq0 gt_eqF // ltEnat (leq_trans _ m1).
+by rewrite unitfE pnatr_eq0 gt_eqF // ltEnat /= (leq_trans _ m1).
 Qed.
 
 Lemma geometric_seriesE (a z : R) (n : nat) : z != 1 ->
@@ -212,12 +212,11 @@ have [nN|Nn] := leqP n N.
 Qed.
 
 Let ler_S1_sup N (x0 : 0%R < x) (xN : x < N%:R) n :
-  S1 N n <= sup (in_set [set S0 N n | n in setT]).
+  S1 N n <= sup [set S0 N n | n in setT].
 Proof.
 rewrite (@le_trans _ _ (S0 N n)) //; last first.
-  apply/sup_upper_bound; last by rewrite inE; exists n.
-  apply/has_supP; split.
-    by exists (S0 N n); rewrite inE; exists n.
+  apply/sup_upper_bound; last by exists n.
+  split; first by exists (S0 N n); exists n.
   rewrite (_ : (fun y : R^o => _) =
       (fun y => exists2 n0, setT n0 & `|S0 N n0| = y)); last first.
     have S'_ge0 : forall n, 0 <= S0 N n.
@@ -235,7 +234,7 @@ have [Ni|iN] := ltnP N i; last first.
       by rewrite subnn expr0.
     by rewrite exprn_ege1 // ler1n (leq_trans _ iN).
   rewrite invr_le1 // ?ler1n ?ltr0n ?fact_gt0 //.
-  by rewrite unitfE pnatr_eq0 gt_eqF // ltEnat fact_gt0.
+  by rewrite unitfE pnatr_eq0 gt_eqF // ltEnat /= fact_gt0.
 rewrite /exp_ expr_div_n (fact_split Ni) mulrCA.
 rewrite ler_pmul2l ?exprn_gt0 // natrX -invf_div -exprB; last 2 first.
   by rewrite ltnW.
@@ -264,12 +263,12 @@ rewrite -(@prednK (i - N).-1%nat) // exprS.
 rewrite ler_pmul //?ler_nat ?exprn_ge0 ?ler0n //.
 rewrite -natrX ler_nat -subn2 -subnDA addn2 -prod_nat_const_nat.
 rewrite big_nat_recr /=; last first.
-  by move: iN1; rewrite -subn1 ltEnat subn_gt0 -addn1 ltn_subRL addn1.
+  by move: iN1; rewrite -subn1 ltEnat /= subn_gt0 -addn1 ltn_subRL addn1.
 rewrite -[X in (X <= _)%nat]muln1 leq_mul // ?(leq_trans _ Ni) //.
 rewrite -(@ler_nat R) !natr_prod big_seq_cond [in X in _ <= X]big_seq_cond.
 apply ler_prod => j.
 rewrite /index_iota mem_iota andbT subnKC; last first.
-  by move: iN1; rewrite -subn1 ltEnat subn_gt0 -addn1 ltn_subRL addn1.
+  by move: iN1; rewrite -subn1 ltEnat /= subn_gt0 -addn1 ltn_subRL addn1.
 case/andP => Nj ji.
 by rewrite ler0n /= ler_nat (leq_trans _ Nj) // (@leq_trans N.+1).
 Qed.
