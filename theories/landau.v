@@ -370,7 +370,7 @@ Notation "fx '==o_(' x \near F ')' hx" :=
 Lemma littleoP (F : set (set T)) (g : T -> W) (f : {o_F g}) : littleo_def F f g.
 Proof. exact/asboolP. Qed.
 Hint Extern 0 (littleo_def _ _ _) => solve[apply: littleoP] : core.
-Hint Extern 0 (locally _ _) => solve[apply: littleoP] : core.
+Hint Extern 0 (nbhs _ _) => solve[apply: littleoP] : core.
 Hint Extern 0 (prop_near1 _) => solve[apply: littleoP] : core.
 Hint Extern 0 (prop_near2 _) => solve[apply: littleoP] : core.
 
@@ -551,7 +551,7 @@ Notation "fx '==O_(' x \near F ')' hx" :=
 Lemma bigOP (F : set (set T)) (g : T -> W) (f : {O_F g}) : bigO_def F f g.
 Proof. exact/asboolP. Qed.
 Hint Extern 0 (bigO_def _ _ _) => solve[apply: bigOP] : core.
-Hint Extern 0 (locally _ _) => solve[apply: bigOP] : core.
+Hint Extern 0 (nbhs _ _) => solve[apply: bigOP] : core.
 Hint Extern 0 (prop_near1 _) => solve[apply: bigOP] : core.
 Hint Extern 0 (prop_near2 _) => solve[apply: bigOP] : core.
 
@@ -791,12 +791,12 @@ Hint Extern 0 (_ = _ + 'o__ _) => apply: eqaddoE; reflexivity : core.
 Hint Extern 0 (_ = _ + 'O__ _) => apply: eqaddOE; reflexivity : core.
 Hint Extern 0 (\forall k \near +oo, \forall x \near _,
   is_true (`|_ x| <= k * `|_ x|)) => solve[apply: bigOP] : core.
-Hint Extern 0 (locally _ _) => solve[apply: bigOP] : core.
+Hint Extern 0 (nbhs _ _) => solve[apply: bigOP] : core.
 Hint Extern 0 (prop_near1 _) => solve[apply: bigOP] : core.
 Hint Extern 0 (prop_near2 _) => solve[apply: bigOP] : core.
 Hint Extern 0 (forall e, is_true (0 < e) -> \forall x \near _,
   is_true (`|_ x| <= e * `|_ x|)) => solve[apply: littleoP] : core.
-Hint Extern 0 (locally _ _) => solve[apply: littleoP] : core.
+Hint Extern 0 (nbhs _ _) => solve[apply: littleoP] : core.
 Hint Extern 0 (prop_near1 _) => solve[apply: littleoP] : core.
 Hint Extern 0 (prop_near2 _) => solve[apply: littleoP] : core.
 Hint Resolve littleo_class : core.
@@ -1295,7 +1295,7 @@ Lemma bigOmegaP {W} (F : set (set T)) (g : T -> W) (f : {Omega_F g}) :
   bigOmega_def F f g.
 Proof. exact/asboolP. Qed.
 Hint Extern 0 (bigOmega_def _ _ _) => solve[apply: bigOmegaP] : core.
-Hint Extern 0 (locally _ _) => solve[apply: bigOmegaP] : core.
+Hint Extern 0 (nbhs _ _) => solve[apply: bigOmegaP] : core.
 Hint Extern 0 (prop_near1 _) => solve[apply: bigOmegaP] : core.
 Hint Extern 0 (prop_near2 _) => solve[apply: bigOmegaP] : core.
 
@@ -1437,7 +1437,7 @@ Lemma bigThetaP {W} (F : set (set T)) (g : T -> W) (f : {Theta_F g}) :
   bigTheta_def F f g.
 Proof. exact/asboolP. Qed.
 Hint Extern 0 (bigTheta_def _ _ _) => solve[apply: bigThetaP] : core.
-Hint Extern 0 (locally _ _) => solve[apply: bigThetaP] : core.
+Hint Extern 0 (nbhs _ _) => solve[apply: bigThetaP] : core.
 Hint Extern 0 (prop_near1 _) => solve[apply: bigThetaP] : core.
 Hint Extern 0 (prop_near2 _) => solve[apply: bigThetaP] : core.
 
