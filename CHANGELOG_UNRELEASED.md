@@ -40,6 +40,16 @@
   + `locally_ball` -> `nbhs_ball`
   + `mx_locally` -> `mx_nbhs`
   + `prod_locally` -> `prod_nbhs`
+  + `Filtered.locally_op` -> `Filtered.nbhs_op`
+  + `locally_of` -> `nbhs_of`
+  + `open_of_locally` -> `open_of_nhbs`
+  + `locally_of_open` -> `nbhs_of_open`
+  + `locally_` -> `nbhs_`
+  + lemma `locally_E` -> `nbhs_E`
+  + lemma `locally_ballE` -> `nbhs_ballE`
+  + `locallyW` -> `nbhsW`
+  + `locally_infty_gt` -> `nbhs_infty_gt`
+  + `locally_infty_ge` -> `nbhs_infty_ge`
 - in `normedtype.v`:
   + `locallyN` -> `nbhsN`
   + `locallyC` -> `nbhsC`
@@ -81,6 +91,26 @@
   + `locally_open_ereal_ninfty` -> `nbhs_open_ereal_ninfty`
   + `continuity_pt_locally` -> `continuity_pt_nbhs`
   + `continuity_pt_locally'` -> `continuity_pt_nbhs'`
+  + `nbhs_le_locally_norm` -> `nbhs_le_nbhs_norm`
+  + `locally_norm_le_nbhs` -> `nbhs_norm_le_nbhs`
+  + `nbhs_locally_norm` -> `nbhs_nbhs_norm`
+  + `locally_normP` -> `nbhs_normP`
+  + `locally_normE` -> `nbhs_normE`
+  + `near_locally_norm` -> `near_nbhs_norm`
+  + lemma `locally_norm_ball_norm` -> `nbhs_norm_ball_norm`
+  + `locally_norm_ball` -> `nbhs_norm_ball`
+  + `pinfty_locally` -> `pinfty_nbhs`
+  + `ninfty_locally` -> `ninfty_nbhs`
+  + lemma `locally_pinfty_gt` -> `nbhs_pinfty_gt`
+  + lemma `locally_pinfty_ge` -> `nbhs_pinfty_ge`
+  + lemma `locally_pinfty_gt_real` -> `nbhs_pinfty_gt_real`
+  + lemma `locally_pinfty_ge_real` -> `nbhs_pinfty_ge_real`
+  + `locally_minfty_lt` -> `nbhs_minfty_lt`
+  + `locally_minfty_le` -> `nbhs_minfty_le`
+  + `locally_minfty_lt_real` -> `nbhs_minfty_lt_real`
+  + `locally_minfty_le_real` -> `nbhs_minfty_le_real`
+  + `lt_ereal_locally` -> `lt_ereal_nbhs`
+  + `locally_pt_comp` -> `nbhs_pt_comp`
 - in `derive.v`:
   + `derivable_locally` -> `derivable_nbhs`
   + `derivable_locallyP` -> `derivable_nbhsP`

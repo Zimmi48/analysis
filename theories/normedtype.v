@@ -37,7 +37,7 @@ Require Import classical_sets posnum topology prodnormedzmodule.
 (*                                   structure on T.                          *)
 (*                           `|x| == the norm of x (notation from ssrnum).    *)
 (*                      ball_norm == balls defined by the norm.               *)
-(*                   locally_norm == neighborhoods defined by the norm.       *)
+(*                      nbhs_norm == neighborhoods defined by the norm.       *)
 (*                                                                            *)
 (* * Domination notations:                                                    *)
 (*              dominated_by h k f F == `|f| <= k * `|h|, near F              *)
@@ -64,14 +64,13 @@ Require Import classical_sets posnum topology prodnormedzmodule.
 (*                                                                            *)
 (* * Filters :                                                                *)
 (*          at_left x, at_right x == filters on real numbers for predicates   *)
-(*                                   that locally hold on the left/right of   *)
-(*                                   x.                                       *)
-(*               ereal_locally' x == filter on extended real numbers that     *)
-(*                                   corresponds to locally' x if x is a real *)
+(*                                   s.t. nbhs holds on the left/right of x   *)
+(*                  ereal_nbhs' x == filter on extended real numbers that     *)
+(*                                   corresponds to nbhs' x if x is a real    *)
 (*                                   number and to predicates that are        *)
 (*                                   eventually true if x is +oo/-oo.         *)
-(*                ereal_locally x == same as ereal_locally' where locally' is *)
-(*                                   replaced with locally.                   *)
+(*                    ereal_nbhs x == same as ereal_nbhs' where nbhs' is      *)
+(*                                   replaced with nbhs.                      *)
 (*                ereal_loc_seq x == sequence that converges to x in the set  *)
 (*                                   of extended real numbers.                *)
 (*                                                                            *)
@@ -240,7 +239,7 @@ Definition pointed_of_zmodule (R : zmodType) : pointedType := PointedType R 0.
 
 Definition filtered_of_normedZmod (K : numDomainType) (R : normedZmodType K)
   : filteredType R := Filtered.Pack (Filtered.Class
-    (@Pointed.class (pointed_of_zmodule R)) (locally_ (ball_ (fun x => `|x|)))).
+    (@Pointed.class (pointed_of_zmodule R)) (nbhs_ (ball_ (fun x => `|x|)))).
 
 Section pseudoMetric_of_normedDomain.
 Variables (K : numDomainType) (R : normedZmodType K).
@@ -256,7 +255,7 @@ move=> /= ? ?; rewrite -(subr0 x) -(subrr y) opprD opprK (addrA x _ y) -addrA.
 by rewrite (le_lt_trans (ler_norm_add _ _)) // ltr_add.
 Qed.
 Definition pseudoMetric_of_normedDomain
-  : PseudoMetric.mixin_of K (@locally_ K R R (ball_ (fun x => `|x|)))
+  : PseudoMetric.mixin_of K (@nbhs_ K R R (ball_ (fun x => `|x|)))
   := PseudoMetricMixin ball_norm_center ball_norm_symmetric ball_norm_triangle erefl.
 End pseudoMetric_of_normedDomain.
 
@@ -327,9 +326,9 @@ Record mixin_of (T : normedZmodType R) (nbhs : T -> set (set T))
 Record class_of (T : Type) := Class {
   base : Num.NormedZmodule.class_of R T;
   pointed_mixin : Pointed.point_of T ;
-  locally_mixin : Filtered.locally_of T T ;
-  topological_mixin : @Topological.mixin_of T locally_mixin ;
-  pseudoMetric_mixin : @PseudoMetric.mixin_of R T locally_mixin ;
+  nbhs_mixin : Filtered.nbhs_of T T ;
+  topological_mixin : @Topological.mixin_of T nbhs_mixin ;
+  pseudoMetric_mixin : @PseudoMetric.mixin_of R T nbhs_mixin ;
   mixin : @mixin_of (Num.NormedZmodule.Pack _ base) _ pseudoMetric_mixin
 }.
 Local Coercion base : class_of >-> Num.NormedZmodule.class_of.
@@ -337,7 +336,7 @@ Definition base2 T c := @PseudoMetric.Class _ _
     (@Topological.Class _
       (Filtered.Class
        (Pointed.Class (@base T c) (pointed_mixin c))
-       (locally_mixin c))
+       (nbhs_mixin c))
       (topological_mixin c))
     (pseudoMetric_mixin c).
 Local Coercion base2 : class_of >-> PseudoMetric.class_of.
@@ -467,7 +466,7 @@ by apply: contrapT; rewrite -forallN => allP; apply: Nall => x; apply: contrapT.
 Qed.
 End Locally.
 
-Section Locally'.
+Section Nbhs'.
 Context {R : numDomainType} {T : pseudoMetricType R}.
 
 Lemma ex_ball_sig (x : T) (P : set T) :
@@ -501,7 +500,7 @@ have [|d_gt0 dP] := @getPex _ D; last by exists (PosNum d_gt0).
 by move: xP => [e bP]; exists (e : R).
 Qed.
 
-End Locally'.
+End Nbhs'.
 
 Lemma ler_addgt0Pr (R : numFieldType) (x y : R) :
    reflect (forall e, e > 0 -> x <= y + e) (x <= y).
@@ -541,8 +540,8 @@ Qed.
 Lemma coord_continuous {K : numFieldType} m n i j :
   continuous (fun M : 'M[K^o]_(m.+1, n.+1) => M i j).
 Proof.
-move=> /= M s /= /(nbhsP (M i j)); rewrite locally_E => -[e e0 es].
-apply/nbhsP; rewrite locally_E; exists e => //= N MN; exact/es/MN.
+move=> /= M s /= /(nbhsP (M i j)); rewrite nbhs_E => -[e e0 es].
+apply/nbhsP; rewrite nbhs_E; exists e => //= N MN; exact/es/MN.
 Qed.
 
 Global Instance Proper_nbhs'_numFieldType (R : numFieldType) (x : R^o) :
@@ -563,7 +562,7 @@ Proof. exact: Proper_nbhs'_numFieldType. Qed.
 
 Canonical ereal_pointed (R : numDomainType) := PointedType {ereal R} (+oo%E).
 
-Section ereal_locally.
+Section ereal_nbhs.
 Context {R : numFieldType}.
 Let R_topologicalType := [topologicalType of R^o].
 Local Open Scope ereal_scope.
@@ -580,9 +579,9 @@ Definition ereal_nbhs (a : {ereal R}) (P : {ereal R} -> Prop) : Prop :=
     | -oo => exists M, M \is Num.real /\ forall x, (x < M%:E)%E -> P x
   end.
 Canonical ereal_ereal_filter := FilteredType {ereal R} {ereal R} (ereal_nbhs).
-End ereal_locally.
+End ereal_nbhs.
 
-Section ereal_locally_instances.
+Section ereal_nbhs_instances.
 Context {R : numFieldType}.
 Let R_topologicalType := [topologicalType of R^o].
 
@@ -673,7 +672,7 @@ exact: (ereal_nbhs'_filter -oo).
 Qed.
 Typeclasses Opaque ereal_nbhs.
 
-End ereal_locally_instances.
+End ereal_nbhs_instances.
 
 Section ereal_topologicalType.
 Variable R : realFieldType.
@@ -682,21 +681,21 @@ Lemma ereal_nbhs_singleton (p : {ereal R}) (A : set {ereal R}) :
   ereal_nbhs p A -> A p.
 Proof.
 move: p => -[p | [M [Mreal MA]] | [M [Mreal MA]]] /=; [|exact: MA | exact: MA].
-move/nbhsP; rewrite locally_E => -[_/posnumP[e]]; apply; exact/ballxx.
+move/nbhsP; rewrite nbhs_E => -[_/posnumP[e]]; apply; exact/ballxx.
 Qed.
 
 Lemma ereal_nbhs_nbhs (p : {ereal R}) (A : set {ereal R}) :
   ereal_nbhs p A -> ereal_nbhs p (ereal_nbhs^~ A).
 Proof.
 move: p => -[p| [M [Mreal MA]] | [M [Mreal MA]]] //=.
-- move/nbhsP; rewrite locally_E => -[_/posnumP[e]] ballA.
-  apply/nbhsP; rewrite locally_E; exists (e%:num / 2) => //= r per.
-  apply/nbhsP; rewrite locally_E; exists (e%:num / 2) => //= x rex.
+- move/nbhsP; rewrite nbhs_E => -[_/posnumP[e]] ballA.
+  apply/nbhsP; rewrite nbhs_E; exists (e%:num / 2) => //= r per.
+  apply/nbhsP; rewrite nbhs_E; exists (e%:num / 2) => //= x rex.
   apply/ballA/(@ball_splitl _ _ r) => //; exact/ball_sym.
 - exists (M + 1); split; first by rewrite realD // real1.
   move=> -[x| _ |] //=.
     rewrite lte_fin => M'x /=.
-    apply/nbhsP; rewrite locally_E; exists 1 => //= y x1y.
+    apply/nbhsP; rewrite nbhs_E; exists 1 => //= y x1y.
     apply MA; rewrite lte_fin.
     rewrite addrC -ltr_subr_addl in M'x.
     rewrite (lt_le_trans M'x) // ler_subl_addl addrC -ler_subl_addl.
@@ -710,7 +709,7 @@ move: p => -[p| [M [Mreal MA]] | [M [Mreal MA]]] //=.
 - exists (M - 1); split; first by rewrite realB // real1.
   move=> -[x| _ |] //=.
     rewrite lte_fin => M'x /=.
-    apply/nbhsP; rewrite locally_E; exists 1 => //= y x1y.
+    apply/nbhsP; rewrite nbhs_E; exists 1 => //= y x1y.
     apply MA; rewrite lte_fin.
     rewrite ltr_subr_addl in M'x.
     rewrite (le_lt_trans _ M'x) // addrC -ler_subl_addl.
@@ -729,21 +728,21 @@ Canonical ereal_topologicalType := TopologicalType _ ereal_topologicalMixin.
 
 End ereal_topologicalType.
 
-Definition pinfty_locally (R : numFieldType) : set (set R) :=
+Definition pinfty_nbhs (R : numFieldType) : set (set R) :=
   fun P => exists M, M \is Num.real /\ forall x, M < x -> P x.
-Arguments pinfty_locally R : clear implicits.
-Definition ninfty_locally (R : numFieldType) : set (set R) :=
+Arguments pinfty_nbhs R : clear implicits.
+Definition ninfty_nbhs (R : numFieldType) : set (set R) :=
   fun P => exists M, M \is Num.real /\ forall x, x < M -> P x.
-Arguments ninfty_locally R : clear implicits.
+Arguments ninfty_nbhs R : clear implicits.
 
-Notation "+oo" := (pinfty_locally _) : ring_scope.
-Notation "-oo" := (ninfty_locally _) : ring_scope.
+Notation "+oo" := (pinfty_nbhs _) : ring_scope.
+Notation "-oo" := (ninfty_nbhs _) : ring_scope.
 
-Section infty_locally_instances.
+Section infty_nbhs_instances.
 Context {R : numFieldType}.
 Let R_topologicalType := [topologicalType of R^o].
 
-Global Instance proper_pinfty_locally : ProperFilter (pinfty_locally R).
+Global Instance proper_pinfty_nbhs : ProperFilter (pinfty_nbhs R).
 Proof.
 apply Build_ProperFilter.
   by move=> P [M [Mreal MP]]; exists (M + 1); apply MP; rewrite ltr_addl.
@@ -769,9 +768,9 @@ split=> /= [|P Q [MP [MPr gtMP]] [MQ [MQr gtMQ]] |P Q sPQ [M [Mr gtM]]].
   by apply/gtMQ; rewrite (le_lt_trans _ MQx) // real_ler_normr // lexx.
 - by exists M; split => // ? /gtM /sPQ.
 Defined.
-Typeclasses Opaque proper_pinfty_locally.
+Typeclasses Opaque proper_pinfty_nbhs.
 
-Global Instance proper_ninfty_locally : ProperFilter (ninfty_locally R).
+Global Instance proper_ninfty_nbhs : ProperFilter (ninfty_nbhs R).
 Proof.
 apply Build_ProperFilter.
 - move=> P [M [Mr ltMP]]; exists (M - 1).
@@ -803,7 +802,7 @@ apply Build_ProperFilter.
     by rewrite real_ler_normr ?realN // lexx.
   + by exists M; split => // x /ltM /sPQ.
 Defined.
-Typeclasses Opaque proper_ninfty_locally.
+Typeclasses Opaque proper_ninfty_nbhs.
 
 (*Global Instance ereal_locally'_filter :
   forall x : {ereal R}, ProperFilter (ereal_locally' x).
@@ -882,35 +881,37 @@ move=> [M [Mreal AM]]; exists (M * 2); split.
 by move=> x; rewrite -ltr_pdivl_mulr //; apply: AM.
 Qed.
 
-Lemma locally_pinfty_gt (c : {posnum R}) : \forall x \near +oo, c%:num < x.
+Lemma nbhs_pinfty_gt (c : {posnum R}) : \forall x \near +oo, c%:num < x.
 Proof. by exists c%:num; split => // ; rewrite realE posnum_ge0. Qed.
 
-Lemma locally_pinfty_ge (c : {posnum R}) : \forall x \near +oo, c%:num <= x.
+Lemma nbhs_pinfty_ge (c : {posnum R}) : \forall x \near +oo, c%:num <= x.
 Proof. by exists c%:num; rewrite realE posnum_ge0; split => //; apply: ltW. Qed.
 
-Lemma locally_pinfty_gt_real (c : R) : c \is Num.real ->
+Lemma nbhs_pinfty_gt_real (c : R) : c \is Num.real ->
   \forall x \near +oo, c < x.
 Proof. by exists c. Qed.
 
-Lemma locally_pinfty_ge_real (c : R) : c \is Num.real ->
+Lemma nbhs_pinfty_ge_real (c : R) : c \is Num.real ->
   \forall x \near +oo, c <= x.
 Proof. by exists c; split => //; apply: ltW. Qed.
 
-Lemma locally_minfty_lt (c : {posnum R}) : \forall x \near -oo, c%:num > x.
+Lemma nbhs_minfty_lt (c : {posnum R}) : \forall x \near -oo, c%:num > x.
 Proof. by exists c%:num; split => // ; rewrite realE posnum_ge0. Qed.
 
-Lemma locally_minfty_le (c : {posnum R}) : \forall x \near -oo, c%:num >= x.
-Proof. by exists c%:num; rewrite realE posnum_ge0/=; split => // x; apply: ltW. Qed.
+Lemma nbhs_minfty_le (c : {posnum R}) : \forall x \near -oo, c%:num >= x.
+Proof.
+by exists c%:num; rewrite realE posnum_ge0 /=; split => // x; apply: ltW.
+Qed.
 
-Lemma locally_minfty_lt_real (c : R) : c \is Num.real ->
+Lemma nbhs_minfty_lt_real (c : R) : c \is Num.real ->
   \forall x \near -oo, c > x.
 Proof. by exists c. Qed.
 
-Lemma locally_minfty_le_real (c : R) : c \is Num.real ->
+Lemma nbhs_minfty_le_real (c : R) : c \is Num.real ->
   \forall x \near -oo, c >= x.
 Proof. by exists c; split => // ?; apply: ltW. Qed.
 
-End infty_locally_instances.
+End infty_nbhs_instances.
 
 Hint Extern 0 (is_true (0 < _)) => match goal with
   H : ?x \is_near (nbhs +oo) |- _ =>
@@ -1479,7 +1480,7 @@ move: re1; rewrite le_eqVlt => /orP[re1|re1].
 by apply (@nbhs_fin_out_below _ e) => //; rewrite ltW.
 Qed.
 
-Lemma ereal_nbhsE : nbhs = locally_ ereal_ball.
+Lemma ereal_nbhsE : nbhs = nbhs_ ereal_ball.
 Proof.
 rewrite predeq2E => x A; split.
 - rewrite {1}/nbhs /= /ereal_nbhs.
@@ -1719,50 +1720,50 @@ Proof. by case: V x => V0 [a b [c]] //= v; rewrite c. Qed.
 
 Local Notation ball_norm := (ball_ (@normr R V)).
 
-Local Notation locally_norm := (locally_ ball_norm).
+Local Notation nbhs_norm := (nbhs_ ball_norm).
 
-Lemma nbhs_le_locally_norm (x : V) : nbhs x `=>` locally_norm x.
+Lemma nbhs_le_nbhs_norm (x : V) : nbhs x `=>` nbhs_norm x.
 Proof.
 move=> P [_ /posnumP[e] subP]; apply/nbhsP.
 by eexists; last (move=> y Py; apply/subP; rewrite ball_normE; apply/Py).
 Qed.
 
-Lemma locally_norm_le_nbhs x : locally_norm x `=>` nbhs x.
+Lemma nbhs_norm_le_nbhs x : nbhs_norm x `=>` nbhs x.
 Proof.
 move=> P /nbhsP [_ /posnumP[e] Pxe].
 by exists e%:num => // y; rewrite ball_normE; apply/Pxe.
 Qed.
 
-Lemma nbhs_locally_norm : locally_norm = nbhs.
+Lemma nbhs_nbhs_norm : nbhs_norm = nbhs.
 Proof.
-by rewrite funeqE => x; rewrite /locally_norm ball_normE filter_from_ballE.
+by rewrite funeqE => x; rewrite /nbhs_norm ball_normE filter_from_ballE.
 Qed.
 
-Lemma locally_normP x P : nbhs x P <-> locally_norm x P.
-Proof. by rewrite nbhs_locally_norm. Qed.
+Lemma nbhs_normP x P : nbhs x P <-> nbhs_norm x P.
+Proof. by rewrite nbhs_nbhs_norm. Qed.
 
 Lemma filter_from_norm_nbhs x :
   @filter_from R _ [set x : R | 0 < x] (ball_norm x) = nbhs x.
-Proof. by rewrite -nbhs_locally_norm. Qed.
+Proof. by rewrite -nbhs_nbhs_norm. Qed.
 
-Lemma locally_normE (x : V) (P : set V) :
-  locally_norm x P = \near x, P x.
-Proof. by rewrite nbhs_locally_norm near_simpl. Qed.
+Lemma nbhs_normE (x : V) (P : set V) :
+  nbhs_norm x P = \near x, P x.
+Proof. by rewrite nbhs_nbhs_norm near_simpl. Qed.
 
 Lemma filter_from_normE (x : V) (P : set V) :
   @filter_from R _ [set x : R | 0 < x] (ball_norm x) P = \near x, P x.
 Proof. by rewrite filter_from_norm_nbhs. Qed.
 
-Lemma near_locally_norm (x : V) (P : set V) :
-  (\forall x \near locally_norm x, P x) = \near x, P x.
-Proof. exact: locally_normE. Qed.
+Lemma near_nbhs_norm (x : V) (P : set V) :
+  (\forall x \near nbhs_norm x, P x) = \near x, P x.
+Proof. exact: nbhs_normE. Qed.
 
-Lemma locally_norm_ball_norm x (e : {posnum R}) :
-  locally_norm x (ball_norm x e%:num).
+Lemma nbhs_norm_ball_norm x (e : {posnum R}) :
+  nbhs_norm x (ball_norm x e%:num).
 Proof. by exists e%:num. Qed.
 
 Lemma nbhs_ball_norm (x : V) (eps : {posnum R}) : nbhs x (ball_norm x eps%:num).
-Proof. rewrite -nbhs_locally_norm; apply: locally_norm_ball_norm. Qed.
+Proof. rewrite -nbhs_nbhs_norm; apply: nbhs_norm_ball_norm. Qed.
 
 Lemma ball_norm_dec x y (e : R) : {ball_norm x e y} + {~ ball_norm x e y}.
 Proof. exact: pselect. Qed.
@@ -1774,19 +1775,18 @@ Lemma ball_norm_le x (e1 e2 : R) :
   e1 <= e2 -> ball_norm x e1 `<=` ball_norm x e2.
 Proof. by move=> e1e2 y /lt_le_trans; apply. Qed.
 
-Let locally_simpl :=
-  (nbhs_simpl,@nbhs_locally_norm,@filter_from_norm_nbhs).
+Let nbhs_simpl := (nbhs_simpl,@nbhs_nbhs_norm,@filter_from_norm_nbhs).
 
 Lemma cvg_distP {F : set (set V)} {FF : Filter F} (y : V) :
   F --> y <-> forall eps, 0 < eps -> \forall y' \near F, `|y - y'| < eps.
-Proof. by rewrite -filter_fromP /= !locally_simpl. Qed.
+Proof. by rewrite -filter_fromP /= !nbhs_simpl. Qed.
 
 Lemma cvg_dist {F : set (set V)} {FF : Filter F} (y : V) :
   F --> y -> forall eps, eps > 0 -> \forall y' \near F, `|y - y'| < eps.
 Proof. by move=> /cvg_distP. Qed.
 
-Lemma locally_norm_ball x (eps : {posnum R}) : locally_norm x (ball x eps%:num).
-Proof. rewrite nbhs_locally_norm; by apply: nbhs_ball. Qed.
+Lemma nbhs_norm_ball x (eps : {posnum R}) : nbhs_norm x (ball x eps%:num).
+Proof. rewrite nbhs_nbhs_norm; by apply: nbhs_ball. Qed.
 
 End NormedModule_numDomainType.
 Hint Resolve normr_ge0 : core.
@@ -1795,7 +1795,7 @@ Arguments cvg_dist {_ _ F FF}.
 Lemma pinfty_ex_gt {R : numFieldType} (m : R) (A : set R) : m \is Num.real ->
   (\forall k \near +oo, A k) -> exists2 M, m < M & A M.
 Proof.
-by move=> m_real Agt; near (pinfty_locally R) => M;
+by move=> m_real Agt; near (pinfty_nbhs R) => M;
    exists M; near: M => //; exists m.
 Grab Existential Variables. all: end_near. Qed.
 
@@ -1982,7 +1982,7 @@ Implicit Types (x y z : V).
 
 Local Notation ball_norm := (ball_ (@normr R V)).
 
-Local Notation locally_norm := (locally_ ball_norm).
+Local Notation nbhs_norm := (nbhs_ ball_norm).
 
 Lemma norm_hausdorff : hausdorff V.
 Proof.
@@ -2074,10 +2074,9 @@ End NormedModule_numFieldType.
 Arguments cvg_bounded {_ _ F FF}.
 Hint Extern 0 (hausdorff _) => solve[apply: norm_hausdorff] : core.
 
-Module Export LocallyNorm.
-Definition nbhs_simpl :=
-  (nbhs_simpl,@nbhs_locally_norm,@filter_from_norm_nbhs).
-End LocallyNorm.
+Module Export NbhsNorm.
+Definition nbhs_simpl := (nbhs_simpl,@nbhs_nbhs_norm,@filter_from_norm_nbhs).
+End NbhsNorm.
 
 Section hausdorff.
 
@@ -2095,8 +2094,8 @@ Qed.
 End hausdorff.
 
 Module Export NearNorm.
-Definition near_simpl := (@near_simpl, @locally_normE,
-   @filter_from_normE, @near_locally_norm).
+Definition near_simpl := (@near_simpl, @nbhs_normE, @filter_from_normE,
+  @near_nbhs_norm).
 Ltac near_simpl := rewrite ?near_simpl.
 End NearNorm.
 
@@ -2106,10 +2105,10 @@ Lemma continuous_cvg_dist {R : numFieldType}
 Proof.
 move=> cf xl e.
 move/cvg_dist: (cf l) => /(_ _ (posnum_gt0 e)).
-rewrite nearE /= => /nbhsP; rewrite locally_E => -[i i0]; apply.
+rewrite nearE /= => /nbhsP; rewrite nbhs_E => -[i i0]; apply.
 have /@cvg_dist : Filter [filter of x] by apply: filter_on_Filter.
 move/(_ _ xl _ i0).
-rewrite nearE /= => /nbhsP; rewrite locally_E => -[j j0].
+rewrite nearE /= => /nbhsP; rewrite nbhs_E => -[j j0].
 by move/(_ _ (ballxx _ j0)); rewrite -ball_normE.
 Qed.
 
@@ -2745,7 +2744,7 @@ Qed.
 
 Section NVS_continuity_normedModType.
 Context {K : numFieldType} {V : normedModType K}.
-Local Notation "'+oo'" := (pinfty_locally K).
+Local Notation "'+oo'" := (pinfty_nbhs K).
 
 Lemma add_continuous : continuous (fun z : V * V => z.1 + z.2).
 Proof.
@@ -2758,7 +2757,7 @@ Lemma scale_continuous : continuous (fun z : K^o * V => z.1 *: z.2).
 Proof.
 move=> [k x]; apply/cvg_distP=> _/posnumP[e].
 rewrite !near_simpl /=; near +oo => M.
-have M_gt0 : M > 0 by near: M; apply: locally_pinfty_gt_real; rewrite real0.
+have M_gt0 : M > 0 by near: M; apply: nbhs_pinfty_gt_real; rewrite real0.
 near=> l z => /=.
 rewrite (@distm_lt_split _ _ (k *: z)) // -?(scalerBr, scalerBl) normmZ.
   suff: (`|k| + 1) * `|x - z| < e%:num / 2.
@@ -2793,7 +2792,7 @@ Qed.
 Lemma norm_continuous : continuous ((@normr _ V) : V -> K^o).
 Proof.
 move=> x; apply/(@cvg_distP _ [normedModType K of K^o]) => _/posnumP[e] /=.
-rewrite !near_simpl; apply/locally_normP; exists e%:num => // y Hy.
+rewrite !near_simpl; apply/nbhs_normP; exists e%:num => // y Hy.
 exact/(le_lt_trans (ler_dist_dist _ _)).
 Qed.
 
@@ -3283,7 +3282,7 @@ End TODO_add_to_ssrnum.
 
 Section cvg_seq_bounded.
 Context {K : numFieldType}.
-Local Notation "'+oo'" := (@pinfty_locally K).
+Local Notation "'+oo'" := (@pinfty_nbhs K).
 
 Lemma cvg_seq_bounded {V : normedModType K} (a : nat -> V) :
   cvg a -> bounded_fun a.
@@ -3293,9 +3292,9 @@ rewrite [(\near a, _ <= _)](near_map _ \oo) => -[N _ /(_ _) a_leM].
 have Moo_real : Moo \is Num.real by rewrite ger0_real ?(le_trans _ (a_leM N _)).
 rewrite /bounded_on /=; near=> M => n _.
 have [nN|nN]/= := leqP N n.
-  by apply: (le_trans (a_leM _ _)) => //; near: M; apply: locally_pinfty_ge_real.
+  by apply: (le_trans (a_leM _ _)) => //; near: M; apply: nbhs_pinfty_ge_real.
 move: n nN; suff /(_ (Ordinal _)) : forall n : 'I_N, `|a n| <= M by [].
-by near: M; apply: filter_forall => i; apply: locally_pinfty_ge_real.
+by near: M; apply: filter_forall => i; apply: nbhs_pinfty_ge_real.
 Grab Existential Variables. all: end_near. Qed.
 
 End cvg_seq_bounded.
@@ -3569,7 +3568,7 @@ Grab Existential Variables. all: end_near. Qed.
 (** Local properties in [R] *)
 
 (* TODO: generalize to numFieldType? *)
-Lemma lt_ereal_locally (R : realFieldType) (a b : {ereal R}) (x : R) :
+Lemma lt_ereal_nbhs (R : realFieldType) (a b : {ereal R}) (x : R) :
   (a < x%:E)%E -> (x%:E < b)%E ->
   exists delta : {posnum R},
     forall y, `|y - x| < delta%:num -> ((a < y%:E) && (y%:E < b))%E.
@@ -3597,7 +3596,7 @@ Lemma nbhs_interval (R : realFieldType) (P : R -> Prop) (x : R^o) (a b : {ereal 
   (forall y : R, a < y%:E -> y%:E < b -> P y)%E ->
   nbhs x P.
 Proof.
-move => Hax Hxb Hp; case: (lt_ereal_locally Hax Hxb) => d Hd.
+move => Hax Hxb Hp; case: (lt_ereal_nbhs Hax Hxb) => d Hd.
 exists d%:num => //= y; rewrite /= distrC.
 by move=> /Hd /andP[??]; apply: Hp.
 Qed.
@@ -4126,7 +4125,7 @@ rewrite continuity_pt_cvg' (@cvg_distP _ [normedModType _ of Rdefinitions.R^o]).
 exact.
 Qed.
 
-Lemma locally_pt_comp (P : Rdefinitions.R -> Prop)
+Lemma nbhs_pt_comp (P : Rdefinitions.R -> Prop)
   (f : Rdefinitions.R -> Rdefinitions.R) (x : Rdefinitions.R) :
   nbhs (f x) P -> Ranalysis1.continuity_pt f x -> \near x, P (f x).
 Proof. by move=> Lf /continuity_pt_cvg; apply. Qed.

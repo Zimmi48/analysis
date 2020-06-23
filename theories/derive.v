@@ -169,7 +169,7 @@ Proof.
 move=> /diff_locallyP [dfc]; rewrite -addrA.
 rewrite (littleo_bigO_eqo (cst (1 : R^o))); last first.
   apply/eqOP; near=> k; rewrite /cst [`|1 : R^o|]normr1 mulr1.
-  near=> y; rewrite ltW //; near: y; apply/locally_normP.
+  near=> y; rewrite ltW //; near: y; apply/nbhs_normP.
   by exists k; [near: k; exists 0; rewrite real0|move=> ? /=; rewrite sub0r normrN].
 rewrite addfo; first by move=> /eqolim; rewrite cvg_shift add0r.
 by apply/eqolim0P; apply: (cvg_trans (dfc 0)); rewrite linear0.
@@ -303,14 +303,14 @@ pose g2 : R -> W := fun h : R => h^-1 *: k (h *: v ).
 rewrite (_ : g = g1 + g2) ?funeqE // -(addr0 (_ _ v)); apply: (@cvgD _ _ [topologicalType of R^o]).
   rewrite -(scale1r (_ _ v)); apply: cvgZl => /= X [e e0].
   rewrite /ball_ /= => eX.
-  apply/nbhsP; rewrite locally_E.
+  apply/nbhsP; rewrite nbhs_E.
   by exists e => //= x _ x0; apply eX; rewrite mulVr // ?unitfE // subrr normr0.
 rewrite /g2.
 have [/eqP ->|v0] := boolP (v == 0).
   rewrite (_ : (fun _ => _) = cst 0); first exact: cvg_cst.
   by rewrite funeqE => ?; rewrite scaler0 /k littleo_lim0 // scaler0.
 apply/cvg_distP => e e0.
-rewrite nearE /=; apply/nbhsP; rewrite locally_E.
+rewrite nearE /=; apply/nbhsP; rewrite nbhs_E.
 have /(littleoP [littleo of k]) /nbhsP[i i0 Hi] : 0 < e / (2 * `|v|).
   by rewrite divr_gt0 // pmulr_rgt0 // normr_gt0.
 exists (i / `|v|); first by rewrite divr_gt0 // normr_gt0.
@@ -779,7 +779,7 @@ apply/eqoP=> _ /posnumP[e]; near=> x; rewrite (le_trans (fschwarz _ _))//.
 rewrite ler_pmul ?pmulr_rge0 //; last by rewrite nng_le_maxr /= lexx orbT.
 rewrite -ler_pdivl_mull //.
 suff : `|x| <= k%:num ^-1 * e%:num by apply: le_trans; rewrite nng_le_maxr /= lexx.
-near: x; rewrite !near_simpl; apply/nbhs_le_locally_norm.
+near: x; rewrite !near_simpl; apply/nbhs_le_nbhs_norm.
 by exists (k%:num ^-1 * e%:num) => // ? /=; rewrite distrC subr0 => /ltW.
 Grab Existential Variables. all: end_near. Qed.
 
@@ -931,7 +931,7 @@ rewrite -[X in X + _]mulr1 -[X in 1 / _ * X](@mulfVK _ (x ^+ 2)); last first.
   by rewrite sqrf_eq0.
 rewrite mulrA mulf_div mulr1.
 have hDx_neq0 : h + x != 0.
-  near: h; rewrite !nbhs_simpl; apply/locally_normP.
+  near: h; rewrite !nbhs_simpl; apply/nbhs_normP.
   exists `|x|; first by rewrite normr_gt0.
   move=> h /=; rewrite distrC subr0 -subr_gt0 => lthx.
   rewrite -(normr_gt0 (h + x : R^o)) addrC -[h]opprK.
